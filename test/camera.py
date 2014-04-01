@@ -44,6 +44,8 @@ while running:
     time.sleep(0.05)
     # fetch the camera image
     image = cam.get_image()
+    # flip image horizontally
+    image = pygame.transform.flip(image, 1, 0)
     # blank out the screen
     screen.fill([0,0,0])
     # copy the camera image to the screen
