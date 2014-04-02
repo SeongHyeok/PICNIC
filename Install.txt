@@ -1,0 +1,41 @@
+###############################################################################
+# Installation Document
+###############################################################################
+# Environment
+
+- Preferred OS: Ubuntu
+- Language: Python 2.7
+
+###############################################################################
+# Install cheese and check it works
+
+> sudo apt-get install cheese
+> cheese
+
+###############################################################################
+# Install OpenCV
+(To install OpenCV library, choose one among following two options)
+
+# Using Website
+
+1. Download openCV and extract it
+http://opencv.org/downloads.html
+
+2. Follow instructions in the following page (It takes long time when doing make)
+http://docs.opencv.org/doc/tutorials/introduction/linux_install/linux_install.html
+
+
+# Using Command (just copy and paste)
+
+> sudo apt-get install build-essential cmake
+> cd /tmp
+> wget -O opencv.zip http://downloads.sourceforge.net/project/opencvlibrary/opencv-unix/2.4.8/opencv-2.4.8.zip?r=http%3A%2F%2Fopencv.org%2Fdownloads.html&ts=1396415870&use_mirror=softlayer-ams
+> unzip opencv.zip
+> cd opencv-2.4.8
+> mkdir release
+> cd release
+> cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local .. 
+> make
+> sudo make install
+
+
