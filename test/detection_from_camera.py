@@ -109,11 +109,6 @@ if __name__ == '__main__':
 
     running = True
     while running:
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                quit_from_game = False
-                running = False
-                break
 
         #time.sleep(1 / 120)  # 60 frames per second
         time.sleep(1 / 30)
@@ -132,7 +127,7 @@ if __name__ == '__main__':
         #        detect_mouth(cv_image, storage)
 
         #points = detect_faces(cv_image, storage)  # Get points of faces.
-        points += detect_eyes(cv_image, storage)
+        points = detect_eyes(cv_image, storage)
 
         cv_image = draw_from_points(cv_image, points)  # Draw points
 
