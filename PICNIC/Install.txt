@@ -37,5 +37,3 @@ http://docs.opencv.org/doc/tutorials/introduction/linux_install/linux_install.ht
 > cmake -D CMAKE_BUILD_TYPE=RELEASE -D CMAKE_INSTALL_PREFIX=/usr/local .. 
 > make
 > sudo make install
-
-
