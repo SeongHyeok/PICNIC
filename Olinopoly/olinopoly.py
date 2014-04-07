@@ -40,11 +40,15 @@ g_screen_height = 800
 if __name__ == "__main__":
     pygame.init()
 
+    # Initialize screen
+    size = (g_screen_width, g_screen_height)
+    screen = pygame.display.set_mode(size)
+
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
                 break
-
+        
     pygame.quit()
