@@ -30,8 +30,8 @@ import sys, traceback
 ############################################################################
 
 # Screen
-g_screen_board_width = 600
-g_screen_board_height = 600
+g_screen_board_width = 850
+g_screen_board_height = 850
 g_screen_status_width = 200
 
 g_screen_width = g_screen_board_width + g_screen_status_width
@@ -121,8 +121,13 @@ class OlinopolyView:
         self.screen = screen
 
     def draw(self):
-        pass
-
+        #fill in background color
+        self.screen.fill(pygame.Color(236,245,235))
+        
+        for map_block in self.model.map_blocks:
+            pygame.draw.rect(self.screen, pygame.Color(19,110,13), (map_block.x, map_block.y, map_block.width, map_block.height),3)
+        
+        pygame.display.flip()
 ############################################################################
 # Controller Classes
 ############################################################################
