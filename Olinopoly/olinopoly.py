@@ -43,9 +43,15 @@ g_screen_status_width = 300
 g_screen_width = g_screen_board_width + g_screen_status_width
 g_screen_height = g_screen_board_height
 
+g_line_width = 2
+
 # Map
 g_map_num_blocks_in_line = 10
-assert g_map_num_blocks_in_line >= 5
+g_map_num_blocks_in_line_max = 10
+g_map_num_blocks_in_line_min = 5
+assert \
+    g_map_num_blocks_in_line_min <= g_map_num_blocks_in_line and \
+    g_map_num_blocks_in_line_max <= g_map_num_blocks_in_line_max
 g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line
 g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line
 
@@ -76,7 +82,8 @@ class OlinopolyModel:
 
         ##############################
         # Create map data
-        # Following code for generating map blocks is generic
+
+        # Powerful feature of our code is it is generic for number!
         self.map_blocks = []
         num = 1
         for i in range(1, 5, 1):    # 1 ~ 4
@@ -111,14 +118,9 @@ class OlinopolyModel:
                         x = init_x
                         y = init_y + j * g_map_block_height
 
-                if num == 2:
-                    map_block_object = MapBlock(
-                        (x, y, g_map_block_width, g_map_block_height), 'i', True, num
-                    )
-                else:
-                    map_block_object = MapBlock(
-                        (x, y, g_map_block_width, g_map_block_height), 'c', True, num
-                    )
+                map_block_object = MapBlock(
+                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num
+                )
                 self.map_blocks.append(map_block_object)
                 num += 1
 
@@ -152,10 +154,18 @@ class Drawable(object):
 class MapBlock(Drawable):
     def __init__(self, rect, c_or_i, is_visible, num):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
-        self.num = num  # map block number
+        # map block number
+        self.num = num
+        # image
         if c_or_i == 'i':
-            img_path = os.path.join(g_image_dir_path, "%d.png" % (num))
-            self.img = pygame.transform.scale(pygame.image.load(img_path), (self.rect[2], self.rect[3]))
+            if num in g_chance_card_position:
+                img_path = os.path.join(g_image_dir_path, "chance.png")
+            else:
+                img_path = os.path.join(g_image_dir_path, "%d.png" % (num))
+            self.img = pygame.transform.scale(
+                pygame.image.load(img_path),
+                (self.rect[2] - g_line_width * 2, self.rect[3] - g_line_width * 2)
+            )
         else:
             self.img = None
 
@@ -168,6 +178,10 @@ class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(ChanceCard, self).__init__(rect, c_or_i, is_visible)
         self.size = g_chance_card_num
+        self.img = pygame.transform.scale(
+            pygame.image.load(os.path.join(g_image_dir_path, "chance.png")),
+            (int(self.rect[2] - g_line_width * 2), int(self.rect[3] - g_line_width * 2))
+        )
 
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -193,17 +207,32 @@ class OlinopolyView:
                     self.screen,
                     pygame.Color(19,110,13),
                     map_block.rect,
-                    3
+                    1
                 )
             elif map_block.c_or_i == 'i':
-                self.screen.blit(map_block.img, (map_block.rect[0], map_block.rect[1]))
+                # image
+                self.screen.blit(
+                    map_block.img,
+                    (map_block.rect[0] + g_line_width, map_block.rect[1] + g_line_width)
+                )
+                # rectangle
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19,110,13),
+                    map_block.rect,
+                    1
+                )
 
         # Chance card
+        self.screen.blit(
+            self.model.chance_card.img,
+            (self.model.chance_card.rect[0] + g_line_width, self.model.chance_card.rect[1] + g_line_width)
+        )
         pygame.draw.rect(
             self.screen,
             pygame.Color(19, 110, 13),
             self.model.chance_card.rect,
-            3
+            1
         )
 
         # Complete area
@@ -211,7 +240,7 @@ class OlinopolyView:
             self.screen,
             pygame.Color(19, 110, 13),
             self.model.complete_area.rect,
-            3
+            1
         )
 
         pygame.display.flip()
