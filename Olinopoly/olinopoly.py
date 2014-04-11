@@ -25,6 +25,10 @@ import math
 import time
 import sys, traceback
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 ############################################################################
 # Global variabless
 ############################################################################
@@ -32,16 +36,33 @@ import sys, traceback
 # Screen
 g_screen_board_width = 850
 g_screen_board_height = 850
-g_screen_status_width = 200
+g_screen_status_width = 300
 
 g_screen_width = g_screen_board_width + g_screen_status_width
 g_screen_height = g_screen_board_height
 
 # Map
-#g_map_num_blocks_in_line = 3
 g_map_num_blocks_in_line = 10
+assert g_map_num_blocks_in_line >= 10
 g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line
 g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line
+
+# Chance Card
+g_chance_card_rect = (
+    g_screen_board_width * 0.6,
+    g_screen_board_height * 0.5,
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.3
+)
+g_chance_card_num = 30
+
+# Complete area (for completed markers)
+g_complete_area_rect = (
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.5,
+    g_screen_board_width * 0.3,
+    g_screen_board_height * 0.3
+)
 
 ############################################################################
 # Model Classes
@@ -49,10 +70,13 @@ g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line
 
 class OlinopolyModel:
     def __init__(self):
+
+        ##############################
         # Create map data
+        # Following code for generating map blocks is generic
         self.map_blocks = []
+        num = 1
         for i in range(1, 5, 1):    # 1 ~ 4
-            print "===== i: %d" % (i)
             if i == 1:
                 init_x = g_screen_board_width - g_map_block_width
                 init_y = g_screen_board_height - g_map_block_height
@@ -67,7 +91,6 @@ class OlinopolyModel:
                 init_y = 0
 
             for j in range(g_map_num_blocks_in_line - 1):    # 0 ~ n-1
-                print "== j: %d" % (j)
                 if j == 0:
                     x = init_x
                     y = init_y
@@ -85,31 +108,55 @@ class OlinopolyModel:
                         x = init_x
                         y = init_y + j * g_map_block_height
 
-                print "x: %d / y: %d" % (x, y)
                 map_block_object = MapBlock(
-                    x, y, g_map_block_width, g_map_block_height, 'c', True
+                    (x, y, g_map_block_width, g_map_block_height), 'c', True, num
                 )
                 self.map_blocks.append(map_block_object)
+                num += 1
 
         for i in range(0, len(self.map_blocks)):
-            print "%02d - x: %3d / y: %3d" % (i + 1, self.map_blocks[i].x, self.map_blocks[i].y)
+            logger.debug("%02d - x: %3d / y: %3d / num: %2d",
+                i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
+            )
+
+        ##############################
+        # Create markers
+
+        ##############################
+        # Create chance card
+        self.chance_card = ChanceCard(
+            g_chance_card_rect, 'c', True
+        )
+
+        ##############################
+        # Create complete area
+        self.complete_area = CompleteArea(
+            g_complete_area_rect, 'c', True
+        )
+
 
 class Drawable(object):
-    def __init__(self, x, y, width, height, c_or_i, is_visible):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
+    def __init__(self, rect, c_or_i, is_visible):
+        self.rect = rect
         self.c_or_i = c_or_i
         self.is_visible = is_visible
 
 class MapBlock(Drawable):
-    def __init__(self, x, y, width, height, c_or_i, is_visible):
-        super(MapBlock, self).__init__(x, y, width, height, c_or_i, is_visible)
+    def __init__(self, rect, c_or_i, is_visible, num):
+        super(MapBlock, self).__init__(rect, c_or_i, is_visible)
+        self.num = num
 
 class Marker(Drawable):
-    def __init__(self):
-        pass
+    def __init__(self, rect, c_or_i, is_visible):
+        super(Marker, self).__init__(rect, c_or_i, is_visible)
+
+class ChanceCard(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(ChanceCard, self).__init__(rect, c_or_i, is_visible)
+
+class CompleteArea(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
 
 ############################################################################
 # View Classes
@@ -123,11 +170,34 @@ class OlinopolyView:
     def draw(self):
         #fill in background color
         self.screen.fill(pygame.Color(236,245,235))
-        
+
+        # Map block
         for map_block in self.model.map_blocks:
-            pygame.draw.rect(self.screen, pygame.Color(19,110,13), (map_block.x, map_block.y, map_block.width, map_block.height),3)
-        
+            pygame.draw.rect(
+                self.screen,
+                pygame.Color(19,110,13),
+                map_block.rect,
+                3
+            )
+
+        # Chance card
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.chance_card.rect,
+            3
+        )
+
+        # Complete area
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.complete_area.rect,
+            3
+        )
+
         pygame.display.flip()
+
 ############################################################################
 # Controller Classes
 ############################################################################
