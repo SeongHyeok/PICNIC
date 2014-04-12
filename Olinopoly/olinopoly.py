@@ -249,7 +249,14 @@ class OlinopolyView:
 # Controller Classes
 ############################################################################
 
+class OlinopolyMouseController:
+    """ """
+    def __init__(self, model):
+        self.model = model
 
+    def handleMouseEvent(self, event):
+        if event.type == MOUSEMOTION:
+            logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
 
 ############################################################################
 # Main
@@ -265,15 +272,21 @@ if __name__ == "__main__":
     # MVC objects
     model = OlinopolyModel()
     view = OlinopolyView(model, screen)
+    controller_mouse = OlinopolyMouseController(model)
 
     running = True
+    ####################
+    # While start
     while running:
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
                 break
+            if event.type == MOUSEMOTION:
+                controller_mouse.handleMouseEvent(event)
 
         view.draw()
         time.sleep(.001)
-
+    # While end
+    ####################
     pygame.quit()
