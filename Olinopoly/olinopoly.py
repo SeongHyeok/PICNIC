@@ -34,6 +34,7 @@ logger = logging.getLogger(__name__)
 ############################################################################
 # Path
 g_image_dir_path = os.path.join(os.curdir, "img/map")
+g_marker_image_dir_path = os.path.join(os.curdir, "img/marker")
 
 # Screen
 g_screen_board_width = 850
@@ -72,6 +73,13 @@ g_complete_area_rect = (
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
+
+#Marker
+g_marker_start_x = g_screen_board_width - g_map_block_width
+g_marker_start_y = g_screen_board_height - g_map_block_height
+g_marker_width = g_map_block_width/2
+g_marker_height = g_map_block_height/2
+
 
 ############################################################################
 # Model Classes
@@ -134,7 +142,7 @@ class OlinopolyModel:
 
         ##############################
         # Create markers
-
+        self.marker_object = Marker((g_marker_start_x,g_marker_start_y,g_marker_height,g_marker_width),'i',True, 1)
         ##############################
         # Create chance card
         self.chance_card = ChanceCard(
@@ -146,6 +154,11 @@ class OlinopolyModel:
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
         )
+        
+        ##############################
+        # Create Olin Logo
+        #self.olinlogo = OlinLogo()
+
 
 
 class Drawable(object):
@@ -176,6 +189,16 @@ class Marker(Drawable):
     def __init__(self, rect, c_or_i, is_visible, team):
         super(Marker, self).__init__(rect, c_or_i, is_visible)
         self.team = team
+        self.img = pygame.transform.scale(
+            pygame.image.load(os.path.join(g_marker_image_dir_path, "1.png")),
+            (self.rect[2],self.rect[3])
+        )
+    def moveMarker(self, dice_num, prev_num):
+        self.num = prev_num + dice_num
+        if self.num > 36:
+            self.is_visible = False
+        return self.num
+        
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -189,6 +212,10 @@ class ChanceCard(Drawable):
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
+        
+class OlinLogo(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(OlinLogo, self).__init__(rect, c_or_i, is_visible)
 
 ############################################################################
 # View Classes
@@ -237,6 +264,7 @@ class OlinopolyView:
             self.model.chance_card.rect,
             1
         )
+        
 
         # Complete area
         pygame.draw.rect(
@@ -264,6 +292,19 @@ class OlinopolyView:
 
         pygame.display.flip()
 
+        #Marker
+        self.screen.blit(
+            self.model.marker_object.img,
+            (self.model.marker_object.rect[0], self.model.marker_object.rect[1])
+        )
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.marker_object.rect,
+            1
+        )
+        
+        pygame.display.flip()
 ############################################################################
 # Controller Classes
 ############################################################################
