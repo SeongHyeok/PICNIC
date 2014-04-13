@@ -151,6 +151,10 @@ class OlinopolyModel:
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
         )
+        
+        ##############################
+        # Create Olin Logo
+        #self.olinlogo = OlinLogo()
 
 
 
@@ -205,6 +209,10 @@ class ChanceCard(Drawable):
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
+        
+class OlinLogo(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(OlinLogo, self).__init__(rect, c_or_i, is_visible)
 
 ############################################################################
 # View Classes
