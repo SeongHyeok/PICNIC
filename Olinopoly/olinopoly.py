@@ -324,7 +324,7 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
-    font_map_block_info = pygame.font.SysFont('Verdana', 20, False)
+    font_map_block_info = pygame.font.SysFont('Verdana', 16, False)
 
     # MVC objects
     model = OlinopolyModel()
