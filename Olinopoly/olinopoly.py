@@ -80,6 +80,8 @@ g_complete_area_rect = (
 class OlinopolyModel:
     def __init__(self):
 
+        self.showing_map_block = 0
+
         ##############################
         # Create map data
 
@@ -255,8 +257,37 @@ class OlinopolyMouseController:
         self.model = model
 
     def handleMouseEvent(self, event):
-        if event.type == MOUSEMOTION:
-            logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
+        #if event.type == MOUSEMOTION:
+        #    logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
+        pass
+
+class OlinopolyMouseOverController:
+    """ """
+    def __init__(self, model):
+        self.model = model
+
+    def onMapBlock(self, x, y):
+        logger.debug("On map block")
+
+    def check(self):
+        x, y = pygame.mouse.get_pos()
+        if x <= g_map_block_width:
+            #logger.debug("left")
+            self.onMapBlock(x, y)
+        elif g_map_block_width < x < g_screen_board_width - g_map_block_width:
+            #logger.debug("middle")
+            if 0 <= y <= g_map_block_height:
+                self.onMapBlock(x, y)
+            elif g_screen_board_height - g_map_block_height <= y:
+                self.onMapBlock(x, y)
+            else:
+                pass
+            pass
+        elif g_screen_board_width - g_map_block_width <= x <= g_screen_board_width:
+            #logger.debug("right")
+            self.onMapBlock(x, y)
+        else:
+            pass
 
 ############################################################################
 # Main
@@ -273,6 +304,11 @@ if __name__ == "__main__":
     model = OlinopolyModel()
     view = OlinopolyView(model, screen)
     controller_mouse = OlinopolyMouseController(model)
+    controller_mouse_over = OlinopolyMouseOverController(model)
+
+    # Timer for events
+    # - Mouse over
+    pygame.time.set_timer(USEREVENT + 1, 300)
 
     running = True
     ####################
@@ -282,8 +318,12 @@ if __name__ == "__main__":
             if event.type == QUIT:
                 running = False
                 break
+
             if event.type == MOUSEMOTION:
                 controller_mouse.handleMouseEvent(event)
+
+            if event.type == USEREVENT + 1:
+                controller_mouse_over.check()
 
         view.draw()
         time.sleep(.001)
