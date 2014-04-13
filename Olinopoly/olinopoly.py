@@ -40,27 +40,27 @@ g_screen_board_width = 850
 g_screen_board_height = 850
 g_screen_status_width = 300
 
-g_screen_width = g_screen_board_width + g_screen_status_width
-g_screen_height = g_screen_board_height
+g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
+g_screen_height = g_screen_board_height # DO NOT CHANGE
 
 g_line_width = 2
 
 # Map
 g_map_num_blocks_in_line = 10
-g_map_num_blocks_in_line_max = 10
-g_map_num_blocks_in_line_min = 5
+g_map_num_blocks_in_line_max = 10   # DO NOT CHANGE
+g_map_num_blocks_in_line_min = 5    # DO NOT CHANGE
 assert \
     g_map_num_blocks_in_line_min <= g_map_num_blocks_in_line and \
     g_map_num_blocks_in_line_max <= g_map_num_blocks_in_line_max
-g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line
-g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line
+g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line     # DO NOT CHANGE
+g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line   # DO NOT CHANGE
 
 # Chance Card
-g_chance_card_rect = (
+g_chance_card_rect = (  # DO NOT CHANGE
     g_screen_board_width * 0.6,
-    g_screen_board_height * 0.5,
+    g_screen_board_height * 0.6,
     g_screen_board_width * 0.2,
-    g_screen_board_height * 0.3
+    g_screen_board_height * 0.2
 )
 g_chance_card_num = 30
 g_chance_card_position = [8, 14, 22, 30]
@@ -68,9 +68,9 @@ g_chance_card_position = [8, 14, 22, 30]
 # Complete area (for completed markers)
 g_complete_area_rect = (
     g_screen_board_width * 0.2,
-    g_screen_board_height * 0.5,
+    g_screen_board_height * 0.6,
     g_screen_board_width * 0.3,
-    g_screen_board_height * 0.3
+    g_screen_board_height * 0.2
 )
 
 ############################################################################
@@ -79,8 +79,9 @@ g_complete_area_rect = (
 
 class OlinopolyModel:
     def __init__(self):
-
-        self.showing_map_block = 0
+        self.enable_showing_map_block = True
+        self.prev_showing_map_block = 0
+        self.showing_map_block = 0  # 0 for indicating not-showing
 
         ##############################
         # Create map data
@@ -245,6 +246,16 @@ class OlinopolyView:
             1
         )
 
+        # Map Block Information
+        if self.model.enable_showing_map_block:
+            if self.model.showing_map_block != 0:
+                title = font_map_block_info.render(
+                    ('Map Block Number: %d' % (self.model.showing_map_block)),
+                    True, (10, 10, 115)
+                )
+                x, y = pygame.mouse.get_pos()
+                self.screen.blit(title, (x, y))
+
         pygame.display.flip()
 
 ############################################################################
@@ -266,26 +277,33 @@ class OlinopolyMouseOverController:
     def __init__(self, model):
         self.model = model
 
-    def onMapBlock(self, x, y):
-        logger.debug("On map block")
+    def onMapBlock(self, num):
+        logger.debug("On map block %d" % num)
+        self.model.prev_showing_map_block = self.model.showing_map_block
+        self.model.showing_map_block = num
 
     def check(self):
+        self.model.showing_map_block = 0
+
         x, y = pygame.mouse.get_pos()
-        if x <= g_map_block_width:
-            #logger.debug("left")
-            self.onMapBlock(x, y)
-        elif g_map_block_width < x < g_screen_board_width - g_map_block_width:
+        if g_map_block_width < x < g_screen_board_width - g_map_block_width:
             #logger.debug("middle")
             if 0 <= y <= g_map_block_height:
-                self.onMapBlock(x, y)
+                self.onMapBlock(g_map_num_blocks_in_line * 2 - 1 + x / g_map_block_width)
             elif g_screen_board_height - g_map_block_height <= y:
-                self.onMapBlock(x, y)
+                self.onMapBlock(g_map_num_blocks_in_line - x / g_map_block_width)
             else:
                 pass
             pass
+        elif x <= g_map_block_width:
+            #logger.debug("left")
+            self.onMapBlock(g_map_num_blocks_in_line - 1 + (g_map_num_blocks_in_line - y / g_map_block_height))
         elif g_screen_board_width - g_map_block_width <= x <= g_screen_board_width:
             #logger.debug("right")
-            self.onMapBlock(x, y)
+            num = g_map_num_blocks_in_line * 3 - 2 + (y / g_map_block_height)
+            if num == g_map_num_blocks_in_line * 4 - 3:
+                num = 1
+            self.onMapBlock(num)
         else:
             pass
 
@@ -300,6 +318,8 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
+    font_map_block_info = pygame.font.SysFont('Verdana', 25, False)
+
     # MVC objects
     model = OlinopolyModel()
     view = OlinopolyView(model, screen)
@@ -308,7 +328,7 @@ if __name__ == "__main__":
 
     # Timer for events
     # - Mouse over
-    pygame.time.set_timer(USEREVENT + 1, 300)
+    pygame.time.set_timer(USEREVENT + 1, 500)
 
     running = True
     ####################
