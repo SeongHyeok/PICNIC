@@ -41,27 +41,27 @@ g_screen_board_width = 850
 g_screen_board_height = 850
 g_screen_status_width = 300
 
-g_screen_width = g_screen_board_width + g_screen_status_width
-g_screen_height = g_screen_board_height
+g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
+g_screen_height = g_screen_board_height # DO NOT CHANGE
 
 g_line_width = 2
 
 # Map
 g_map_num_blocks_in_line = 10
-g_map_num_blocks_in_line_max = 10
-g_map_num_blocks_in_line_min = 5
+g_map_num_blocks_in_line_max = 10   # DO NOT CHANGE
+g_map_num_blocks_in_line_min = 5    # DO NOT CHANGE
 assert \
     g_map_num_blocks_in_line_min <= g_map_num_blocks_in_line and \
     g_map_num_blocks_in_line_max <= g_map_num_blocks_in_line_max
-g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line
-g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line
+g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line     # DO NOT CHANGE
+g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line   # DO NOT CHANGE
 
 # Chance Card
-g_chance_card_rect = (
+g_chance_card_rect = (  # DO NOT CHANGE
     g_screen_board_width * 0.6,
-    g_screen_board_height * 0.5,
+    g_screen_board_height * 0.6,
     g_screen_board_width * 0.2,
-    g_screen_board_height * 0.3
+    g_screen_board_height * 0.2
 )
 g_chance_card_num = 30
 g_chance_card_position = [8, 14, 22, 30]
@@ -69,9 +69,9 @@ g_chance_card_position = [8, 14, 22, 30]
 # Complete area (for completed markers)
 g_complete_area_rect = (
     g_screen_board_width * 0.2,
-    g_screen_board_height * 0.5,
+    g_screen_board_height * 0.6,
     g_screen_board_width * 0.3,
-    g_screen_board_height * 0.3
+    g_screen_board_height * 0.2
 )
 
 #Marker
@@ -87,6 +87,9 @@ g_marker_height = g_map_block_height/2
 
 class OlinopolyModel:
     def __init__(self):
+        self.enable_mouseover_map_block_info = True
+        self.prev_mouseover_map_block = 0
+        self.mouseover_map_block = 0  # 0 for indicating not-showing
 
         ##############################
         # Create map data
@@ -225,14 +228,14 @@ class OlinopolyView:
 
     def draw(self):
         #fill in background color
-        self.screen.fill(pygame.Color(236,245,235))
+        self.screen.fill(pygame.Color(236, 245, 235))
 
         # Map block
         for map_block in self.model.map_blocks:
             if map_block.c_or_i == 'c':
                 pygame.draw.rect(
                     self.screen,
-                    pygame.Color(19,110,13),
+                    pygame.Color(19, 110, 13),
                     map_block.rect,
                     1
                 )
@@ -245,7 +248,7 @@ class OlinopolyView:
                 # rectangle
                 pygame.draw.rect(
                     self.screen,
-                    pygame.Color(19,110,13),
+                    pygame.Color(19, 110, 13),
                     map_block.rect,
                     1
                 )
@@ -270,6 +273,22 @@ class OlinopolyView:
             self.model.complete_area.rect,
             1
         )
+
+        # Mouseover Map Block Information
+        if self.model.enable_mouseover_map_block_info:
+            if self.model.mouseover_map_block != 0:
+                msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
+                w, h = font_map_block_info.size(msg)
+                x, y = pygame.mouse.get_pos()
+                title = font_map_block_info.render(msg, True, (10, 10, 115))
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(0, 0, 0),
+                    (x - 5, y - 5, w + 10, h + 10),
+                    1
+                )
+                self.screen.blit(title, (x, y))
 
         pygame.display.flip()
 
@@ -296,8 +315,44 @@ class OlinopolyMouseController:
         self.model = model
 
     def handleMouseEvent(self, event):
-        if event.type == MOUSEMOTION:
-            logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
+        #if event.type == MOUSEMOTION:
+        #    logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
+        pass
+
+class OlinopolyMouseOverController:
+    """ """
+    def __init__(self, model):
+        self.model = model
+
+    def onMapBlock(self, num):
+        logger.debug("On map block %d" % num)
+        self.model.prev_mouseover_map_block = self.model.mouseover_map_block
+        self.model.mouseover_map_block = num
+
+    def check(self):
+        self.model.mouseover_map_block = 0
+
+        x, y = pygame.mouse.get_pos()
+        if g_map_block_width < x < g_screen_board_width - g_map_block_width:
+            #logger.debug("middle")
+            if 0 <= y <= g_map_block_height:
+                self.onMapBlock(g_map_num_blocks_in_line * 2 - 1 + x / g_map_block_width)
+            elif g_screen_board_height - g_map_block_height <= y:
+                self.onMapBlock(g_map_num_blocks_in_line - x / g_map_block_width)
+            else:
+                pass
+            pass
+        elif x <= g_map_block_width:
+            #logger.debug("left")
+            self.onMapBlock(g_map_num_blocks_in_line - 1 + (g_map_num_blocks_in_line - y / g_map_block_height))
+        elif g_screen_board_width - g_map_block_width <= x <= g_screen_board_width:
+            #logger.debug("right")
+            num = g_map_num_blocks_in_line * 3 - 2 + (y / g_map_block_height)
+            if num == g_map_num_blocks_in_line * 4 - 3:
+                num = 1
+            self.onMapBlock(num)
+        else:
+            pass
 
 ############################################################################
 # Main
@@ -310,10 +365,17 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
+    font_map_block_info = pygame.font.SysFont('Verdana', 20, False)
+
     # MVC objects
     model = OlinopolyModel()
     view = OlinopolyView(model, screen)
     controller_mouse = OlinopolyMouseController(model)
+    controller_mouse_over = OlinopolyMouseOverController(model)
+
+    # Timer for events
+    # - Mouse over
+    pygame.time.set_timer(USEREVENT + 1, 500)
 
     running = True
     ####################
@@ -323,8 +385,12 @@ if __name__ == "__main__":
             if event.type == QUIT:
                 running = False
                 break
+
             if event.type == MOUSEMOTION:
                 controller_mouse.handleMouseEvent(event)
+
+            if event.type == USEREVENT + 1:
+                controller_mouse_over.check()
 
         view.draw()
         time.sleep(.001)
