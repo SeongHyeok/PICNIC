@@ -79,9 +79,9 @@ g_complete_area_rect = (
 
 class OlinopolyModel:
     def __init__(self):
-        self.enable_showing_map_block = True
-        self.prev_showing_map_block = 0
-        self.showing_map_block = 0  # 0 for indicating not-showing
+        self.enable_mouseover_map_block_info = True
+        self.prev_mouseover_map_block = 0
+        self.mouseover_map_block = 0  # 0 for indicating not-showing
 
         ##############################
         # Create map data
@@ -201,14 +201,14 @@ class OlinopolyView:
 
     def draw(self):
         #fill in background color
-        self.screen.fill(pygame.Color(236,245,235))
+        self.screen.fill(pygame.Color(236, 245, 235))
 
         # Map block
         for map_block in self.model.map_blocks:
             if map_block.c_or_i == 'c':
                 pygame.draw.rect(
                     self.screen,
-                    pygame.Color(19,110,13),
+                    pygame.Color(19, 110, 13),
                     map_block.rect,
                     1
                 )
@@ -221,7 +221,7 @@ class OlinopolyView:
                 # rectangle
                 pygame.draw.rect(
                     self.screen,
-                    pygame.Color(19,110,13),
+                    pygame.Color(19, 110, 13),
                     map_block.rect,
                     1
                 )
@@ -246,14 +246,20 @@ class OlinopolyView:
             1
         )
 
-        # Map Block Information
-        if self.model.enable_showing_map_block:
-            if self.model.showing_map_block != 0:
-                title = font_map_block_info.render(
-                    ('Map Block Number: %d' % (self.model.showing_map_block)),
-                    True, (10, 10, 115)
-                )
+        # Mouseover Map Block Information
+        if self.model.enable_mouseover_map_block_info:
+            if self.model.mouseover_map_block != 0:
+                msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
+                w, h = font_map_block_info.size(msg)
                 x, y = pygame.mouse.get_pos()
+                title = font_map_block_info.render(msg, True, (10, 10, 115))
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(0, 0, 0),
+                    (x - 5, y - 5, w + 10, h + 10),
+                    1
+                )
                 self.screen.blit(title, (x, y))
 
         pygame.display.flip()
@@ -279,11 +285,11 @@ class OlinopolyMouseOverController:
 
     def onMapBlock(self, num):
         logger.debug("On map block %d" % num)
-        self.model.prev_showing_map_block = self.model.showing_map_block
-        self.model.showing_map_block = num
+        self.model.prev_mouseover_map_block = self.model.mouseover_map_block
+        self.model.mouseover_map_block = num
 
     def check(self):
-        self.model.showing_map_block = 0
+        self.model.mouseover_map_block = 0
 
         x, y = pygame.mouse.get_pos()
         if g_map_block_width < x < g_screen_board_width - g_map_block_width:
@@ -318,7 +324,7 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
-    font_map_block_info = pygame.font.SysFont('Verdana', 25, False)
+    font_map_block_info = pygame.font.SysFont('Verdana', 20, False)
 
     # MVC objects
     model = OlinopolyModel()
