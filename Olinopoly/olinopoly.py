@@ -18,7 +18,7 @@ Created on Sun Apr  6 21:34:32 2014
 # Imports
 ############################################################################
 
-import pygame
+import pygame, Buttons
 from pygame.locals import *
 import random
 import math
@@ -73,6 +73,7 @@ g_complete_area_rect = (
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
+
 
 #Marker
 g_marker_start_x = g_screen_board_width - g_map_block_width
@@ -155,6 +156,7 @@ class OlinopolyModel:
             g_complete_area_rect, 'c', True
         )
 
+
         ##############################
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
@@ -172,6 +174,8 @@ class MapBlock(Drawable):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
         # map block number
         self.num = num
+
+        self.marker_on_block = []
         # image
         if c_or_i == 'i':
             if num in g_chance_card_position:
@@ -186,20 +190,15 @@ class MapBlock(Drawable):
             self.img = None
 
 class Marker(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, team, player):
+    def __init__(self, rect, c_or_i, is_visible, team, player, block_pos):
         super(Marker, self).__init__(rect, c_or_i, is_visible)
         self.team = team
         self.player = player
+        self.block_pos = block_pos
         self.img = pygame.transform.scale(
             pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
             (self.rect[2],self.rect[3])
         )
-    def moveMarker(self, dice_num, prev_block_num):
-        self.num = prev_block_num + dice_num
-        if self.num > 36:
-            self.is_visible = False
-        new_prev_block_num = self.num
-        return self.num
 
 
 class ChanceCard(Drawable):
@@ -227,7 +226,7 @@ class OlinopolyView:
     def __init__(self, model, screen):
         self.model = model
         self.screen = screen
-
+        self.Button1 = Buttons.Button()
     def draw(self):
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
@@ -276,6 +275,8 @@ class OlinopolyView:
             1
         )
 
+        # Roll Dice area
+        self.Button1.create_button(self.screen, (107,142,35), 350, 135, 200,    200,    0,        "Roll Dice!", (255,255,255))
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block != 0:
@@ -354,6 +355,18 @@ class OlinopolyMouseOverController:
         else:
             pass
 
+class MarkerController:
+    def __init__(self, model):
+        self.model = model
+
+    def moveMarker(self, dice_num, prev_block_num):
+        self.prev_block_num = prev_block_num
+        self.model.block_pos = prev_block_num + dice_num
+        if self.model.block_pos > 36:
+            self.model.is_visible = False
+        self.prev_block_num = self.model.block_pos
+        return self.model.block_pos
+
 ############################################################################
 # Main
 ############################################################################
@@ -391,7 +404,12 @@ if __name__ == "__main__":
 
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
-            
+
+            if event.type == MOUSEBUTTONDOWN:
+                if view.Button1.pressed(pygame.mouse.get_pos()):
+                        dice_num = random.randint(1,6)
+                        print dice_num
+
 
         view.draw()
         time.sleep(.001)
