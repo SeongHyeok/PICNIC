@@ -18,7 +18,7 @@ Created on Sun Apr  6 21:34:32 2014
 # Imports
 ############################################################################
 
-import pygame
+import pygame, Buttons
 from pygame.locals import *
 import random
 import math
@@ -73,6 +73,7 @@ g_complete_area_rect = (
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
+
 
 #Marker
 g_marker_start_x = g_screen_board_width - g_map_block_width
@@ -155,6 +156,7 @@ class OlinopolyModel:
             g_complete_area_rect, 'c', True
         )
 
+
         ##############################
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
@@ -227,7 +229,7 @@ class OlinopolyView:
     def __init__(self, model, screen):
         self.model = model
         self.screen = screen
-
+        self.Button1 = Buttons.Button()
     def draw(self):
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
@@ -276,6 +278,8 @@ class OlinopolyView:
             1
         )
 
+        # Roll Dice area
+        self.Button1.create_button(self.screen, (107,142,35), 350, 135, 200,    200,    0,        "Roll Dice!", (255,255,255))
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block != 0:
@@ -392,7 +396,9 @@ if __name__ == "__main__":
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
             
-        
+            if event.type == MOUSEBUTTONDOWN:            
+                if view.Button1.pressed(pygame.mouse.get_pos()):
+                        print random.randint(1,6)
 
         view.draw()
         time.sleep(.001)
