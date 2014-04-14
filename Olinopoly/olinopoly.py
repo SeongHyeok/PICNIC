@@ -142,7 +142,7 @@ class OlinopolyModel:
 
         ##############################
         # Create markers
-        self.marker_object = Marker((g_marker_start_x,g_marker_start_y,g_marker_height,g_marker_width),'i',True, 1)
+        self.marker_object = Marker((g_marker_start_x,g_marker_start_y,g_marker_height,g_marker_width),'i',True, 1,2)
         ##############################
         # Create chance card
         self.chance_card = ChanceCard(
@@ -186,17 +186,19 @@ class MapBlock(Drawable):
             self.img = None
 
 class Marker(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, team):
+    def __init__(self, rect, c_or_i, is_visible, team, player):
         super(Marker, self).__init__(rect, c_or_i, is_visible)
         self.team = team
+        self.player = player
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_marker_image_dir_path, "1.png")),
+            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
             (self.rect[2],self.rect[3])
         )
     def moveMarker(self, dice_num, prev_num):
         self.num = prev_num + dice_num
         if self.num > 36:
             self.is_visible = False
+        new_prev_num = self.num
         return self.num
         
 
@@ -391,6 +393,8 @@ if __name__ == "__main__":
 
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
+            
+        
 
         view.draw()
         time.sleep(.001)
