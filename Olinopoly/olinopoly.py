@@ -142,7 +142,7 @@ class OlinopolyModel:
 
         ##############################
         # Create markers
-        self.marker_object = Marker((g_marker_start_x,g_marker_start_y,g_marker_height,g_marker_width),'i',True, 1)
+        self.marker_object = Marker((g_marker_start_x,g_marker_start_y,g_marker_height,g_marker_width),'i',True, 1,2)
         ##############################
         # Create chance card
         self.chance_card = ChanceCard(
@@ -154,7 +154,7 @@ class OlinopolyModel:
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
         )
-        
+
         ##############################
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
@@ -186,19 +186,21 @@ class MapBlock(Drawable):
             self.img = None
 
 class Marker(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, team):
+    def __init__(self, rect, c_or_i, is_visible, team, player):
         super(Marker, self).__init__(rect, c_or_i, is_visible)
         self.team = team
+        self.player = player
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_marker_image_dir_path, "1.png")),
+            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
             (self.rect[2],self.rect[3])
         )
     def moveMarker(self, dice_num, prev_num):
         self.num = prev_num + dice_num
         if self.num > 36:
             self.is_visible = False
+        new_prev_num = self.num
         return self.num
-        
+
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -212,7 +214,7 @@ class ChanceCard(Drawable):
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
-        
+
 class OlinLogo(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(OlinLogo, self).__init__(rect, c_or_i, is_visible)
@@ -264,7 +266,7 @@ class OlinopolyView:
             self.model.chance_card.rect,
             1
         )
-        
+
 
         # Complete area
         pygame.draw.rect(
@@ -290,8 +292,6 @@ class OlinopolyView:
                 )
                 self.screen.blit(title, (x, y))
 
-        pygame.display.flip()
-
         #Marker
         self.screen.blit(
             self.model.marker_object.img,
@@ -303,7 +303,7 @@ class OlinopolyView:
             self.model.marker_object.rect,
             1
         )
-        
+
         pygame.display.flip()
 ############################################################################
 # Controller Classes
@@ -365,7 +365,7 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
-    font_map_block_info = pygame.font.SysFont('Verdana', 20, False)
+    font_map_block_info = pygame.font.SysFont('Verdana', 16, False)
 
     # MVC objects
     model = OlinopolyModel()
@@ -391,6 +391,8 @@ if __name__ == "__main__":
 
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
+            
+        
 
         view.draw()
         time.sleep(.001)
