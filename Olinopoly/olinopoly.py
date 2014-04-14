@@ -194,11 +194,11 @@ class Marker(Drawable):
             pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
             (self.rect[2],self.rect[3])
         )
-    def moveMarker(self, dice_num, prev_num):
-        self.num = prev_num + dice_num
+    def moveMarker(self, dice_num, prev_block_num):
+        self.num = prev_block_num + dice_num
         if self.num > 36:
             self.is_visible = False
-        new_prev_num = self.num
+        new_prev_block_num = self.num
         return self.num
 
 
@@ -392,7 +392,6 @@ if __name__ == "__main__":
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
             
-        
 
         view.draw()
         time.sleep(.001)
