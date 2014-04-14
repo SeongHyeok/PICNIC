@@ -154,7 +154,7 @@ class OlinopolyModel:
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
         )
-        
+
         ##############################
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
@@ -198,7 +198,7 @@ class Marker(Drawable):
         if self.num > 36:
             self.is_visible = False
         return self.num
-        
+
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -212,7 +212,7 @@ class ChanceCard(Drawable):
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
-        
+
 class OlinLogo(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(OlinLogo, self).__init__(rect, c_or_i, is_visible)
@@ -264,7 +264,7 @@ class OlinopolyView:
             self.model.chance_card.rect,
             1
         )
-        
+
 
         # Complete area
         pygame.draw.rect(
@@ -290,8 +290,6 @@ class OlinopolyView:
                 )
                 self.screen.blit(title, (x, y))
 
-        pygame.display.flip()
-
         #Marker
         self.screen.blit(
             self.model.marker_object.img,
@@ -303,7 +301,7 @@ class OlinopolyView:
             self.model.marker_object.rect,
             1
         )
-        
+
         pygame.display.flip()
 ############################################################################
 # Controller Classes
