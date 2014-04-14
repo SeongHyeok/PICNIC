@@ -269,7 +269,6 @@ class OlinopolyView:
             1
         )
 
-
         # Complete area
         pygame.draw.rect(
             self.screen,
@@ -280,6 +279,7 @@ class OlinopolyView:
 
         # Roll Dice area
         self.Button1.create_button(self.screen, (107,142,35), 350, 135, 200,    200,    0,        "Roll Dice!", (255,255,255))
+
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block != 0:
@@ -309,6 +309,7 @@ class OlinopolyView:
         )
 
         pygame.display.flip()
+
 ############################################################################
 # Controller Classes
 ############################################################################
@@ -395,8 +396,8 @@ if __name__ == "__main__":
 
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
-            
-            if event.type == MOUSEBUTTONDOWN:            
+
+            if event.type == MOUSEBUTTONDOWN:
                 if view.Button1.pressed(pygame.mouse.get_pos()):
                         print random.randint(1,6)
 
