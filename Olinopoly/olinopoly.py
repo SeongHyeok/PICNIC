@@ -39,7 +39,7 @@ g_marker_image_dir_path = os.path.join(os.curdir, "img/marker")
 # Screen
 g_screen_board_width = 850
 g_screen_board_height = 850
-g_screen_status_width = 300
+g_screen_status_width = 510
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
 g_screen_height = g_screen_board_height # DO NOT CHANGE
@@ -136,28 +136,34 @@ class OlinopolyModel:
                 self.map_blocks.append(map_block_object)
                 num += 1
 
-        for i in range(0, len(self.map_blocks)):
-            logger.debug("%02d - x: %3d / y: %3d / num: %2d",
-                i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
-            )
+#        for i in range(0, len(self.map_blocks)):
+ #           logger.debug("%02d - x: %3d / y: %3d / num: %2d",
+  #              i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
+   #         )
 
 
         ##############################
-        # Create markers
-        self.team_one_markers = []
+        # Create initial markers
+        self.team_one_markers_initial = []
         for i in range(1,5):
-            div_pos = g_screen_status_width/4
             if i == 1:
-                marker_before_position_x = g_screen_board_width
+                marker_before_position_x = g_screen_board_width + g_screen_status_width/2
                 marker_before_position_y = 0
-            else:
-                marker_before_position_x = g_screen_board_width + div_pos * i
+            if i == 2:
+                marker_before_position_x = g_screen_board_width + g_screen_status_width*3/4
                 marker_before_position_y = 0
+            if i == 3:
+                marker_before_position_x = g_screen_board_width + g_screen_status_width/2
+                marker_before_position_y = g_screen_board_height*0.2/2
+            if i == 4:
+                marker_before_position_x = g_screen_board_width + g_screen_status_width*3/4
+                marker_before_position_y = g_screen_board_height*0.2/2
             marker_object = Marker(
-                (marker_before_position_x, marker_before_position_y,g_screen_board_height*0.2, g_screen_status_width),
+                (marker_before_position_x, marker_before_position_y, g_screen_status_width/4, g_screen_board_height*0.2/2),
                 'i',True,1,i, None
             )
-            self.team_one_markers.append(marker_object)
+            self.team_one_markers_initial.append(marker_object)
+
 
         ##############################
         # Create chance card
@@ -176,7 +182,13 @@ class OlinopolyModel:
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
 
-
+    def createMarkerOnBoard(self,team,player):
+        self.team_one_markers_board = []
+        new_marker = Marker(
+                        (g_marker_start_x,g_marker_start_y,g_marker_height, g_marker_width),
+                        "i", True, team, player, 1
+                    )
+        self.team_one_markers_board.append(new_marker)
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -212,12 +224,20 @@ class Marker(Drawable):
         self.player = player
         if is_visible == True:
             self.block_pos = block_pos
+            self.c_or_i = "i"
+
         else:
             self.block_pos = None
-        self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
-            (int(self.rect[2]),int(self.rect[3]))
-        )
+            self.c_or_i = "c"
+
+        if self.c_or_i == "i":
+            self.img = pygame.transform.scale(
+                pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
+                (int(self.rect[2]),int(self.rect[3]))
+            )
+        else:
+            self.img = None
+
     def moveMarker(self, dice_num, prev_block_num):
         self.block_pos = prev_block_num + dice_num
         if self.block_pos > 36:
@@ -252,6 +272,7 @@ class OlinopolyView:
         self.model = model
         self.screen = screen
         self.Button1 = Buttons.Button()
+        self.marker_button = []
     def draw(self):
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
@@ -318,16 +339,29 @@ class OlinopolyView:
                 )
                 self.screen.blit(title, (x, y))
 
-        #Marker
-        for marker in self.model.team_one_markers:
+        #Beginning marker
+        for marker in self.model.team_one_markers_initial:
+                self.screen.blit(
+                    marker.img,
+                    (marker.rect[0], marker.rect[1])
+                    )
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19, 110, 13),
+                    marker.rect,
+                    1
+                )
+
+        #Starting marker on map block
+        for marker_board in self.model.createMarkerOnBoard.team_one_markers_board:
             self.screen.blit(
-                marker.img,
-                (marker.rect[0], marker.rect[1])
+                marker_board.img,
+                (marker_board.rect[0], marker_board.rect[1])
             )
             pygame.draw.rect(
                 self.screen,
                 pygame.Color(19, 110, 13),
-                marker.rect,
+                marker_board.rect,
                 1
             )
 
@@ -352,7 +386,7 @@ class OlinopolyMouseOverController:
         self.model = model
 
     def onMapBlock(self, num):
-        logger.debug("On map block %d" % num)
+      #  logger.debug("On map block %d" % num)
         self.model.prev_mouseover_map_block = self.model.mouseover_map_block
         self.model.mouseover_map_block = num
 
@@ -381,11 +415,13 @@ class OlinopolyMouseOverController:
         else:
             pass
 
-"""class MarkerController:
+'''class MarkerController:
     def __init__(self, model):
         self.model = model
 
-    def """
+    def markerclicked(self):
+        x,y = pygame.mouse.get_pos()
+        if'''
 
 ############################################################################
 # Main
@@ -427,8 +463,24 @@ if __name__ == "__main__":
 
             if event.type == MOUSEBUTTONDOWN:
                 if view.Button1.pressed(pygame.mouse.get_pos()):
-                        dice_num = random.randint(1,6)
-                        print dice_num
+                    dice_num = random.randint(1,6)
+                    print dice_num
+                    if len(model.team_one_markers_board) >= 1:
+                        if event.type == MOUSEBUTTONDOWN:
+                            a,b = pygame.mouse.get_pos()
+                            for marker_board in model.team_one_markers_board:
+                                if marker_board.rect[0] < a < marker_board.rect[0] + g_marker_width:
+                                    if marker_board.rect[1] < b < marker_board.rect[1] + g_marker_height:
+                                        marker_board.moveMarker(dice_num,marker_board.board_pos)
+
+                x,y = pygame.mouse.get_pos()
+               # print x, y
+                for marker in model.team_one_markers_initial:
+                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:
+                        if marker.rect[1] < y < marker.rect[1] + g_screen_height*0.2/2:
+                            marker.is_visible = False
+                            model.createMarkerOnBoard(marker.team, marker.player)
+
 
 
         view.draw()
