@@ -272,7 +272,7 @@ class OlinopolyView:
         self.model = model
         self.screen = screen
         self.Button1 = Buttons.Button()
-        self.marker_button = []
+
     def draw(self):
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
