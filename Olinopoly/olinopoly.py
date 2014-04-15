@@ -136,10 +136,10 @@ class OlinopolyModel:
                 self.map_blocks.append(map_block_object)
                 num += 1
 
-#        for i in range(0, len(self.map_blocks)):
- #           logger.debug("%02d - x: %3d / y: %3d / num: %2d",
-  #              i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
-   #         )
+        for i in range(0, len(self.map_blocks)):
+            logger.debug("%02d - x: %3d / y: %3d / num: %2d",
+                i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
+            )
 
 
         ##############################
@@ -376,8 +376,8 @@ class OlinopolyMouseController:
         self.model = model
 
     def handleMouseEvent(self, event):
-        #if event.type == MOUSEMOTION:
-        #    logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
+        if event.type == MOUSEMOTION:
+            logger.debug("mouse x: %d, y: %d" % (event.pos[0], event.pos[1]))
         pass
 
 class OlinopolyMouseOverController:
