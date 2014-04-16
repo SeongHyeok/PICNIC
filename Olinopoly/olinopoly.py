@@ -39,7 +39,7 @@ g_marker_image_dir_path = os.path.join(os.curdir, "img/marker")
 # Screen
 g_screen_board_width = 850
 g_screen_board_height = 850
-g_screen_status_width = 300
+g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
 g_screen_height = g_screen_board_height # DO NOT CHANGE
@@ -174,8 +174,6 @@ class MapBlock(Drawable):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
         # map block number
         self.num = num
-
-        self.marker_on_block = []
         # image
         if c_or_i == 'i':
             if num in g_chance_card_position:
@@ -190,15 +188,20 @@ class MapBlock(Drawable):
             self.img = None
 
 class Marker(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, team, player, block_pos):
+    def __init__(self, rect, c_or_i, is_visible, team, player):
         super(Marker, self).__init__(rect, c_or_i, is_visible)
         self.team = team
         self.player = player
-        self.block_pos = block_pos
         self.img = pygame.transform.scale(
             pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
             (self.rect[2],self.rect[3])
         )
+    def moveMarker(self, dice_num, prev_num):
+        self.num = prev_num + dice_num
+        if self.num > 36:
+            self.is_visible = False
+        new_prev_num = self.num
+        return self.num
 
 
 class ChanceCard(Drawable):
@@ -356,18 +359,6 @@ class OlinopolyMouseOverController:
         else:
             pass
 
-class MarkerController:
-    def __init__(self, model):
-        self.model = model
-
-    def moveMarker(self, dice_num, prev_block_num):
-        self.prev_block_num = prev_block_num
-        self.model.block_pos = prev_block_num + dice_num
-        if self.model.block_pos > 36:
-            self.model.is_visible = False
-        self.prev_block_num = self.model.block_pos
-        return self.model.block_pos
-
 ############################################################################
 # Main
 ############################################################################
@@ -408,9 +399,7 @@ if __name__ == "__main__":
 
             if event.type == MOUSEBUTTONDOWN:
                 if view.Button1.pressed(pygame.mouse.get_pos()):
-                        dice_num = random.randint(1,6)
-                        print dice_num
-
+                        print random.randint(1,6)
 
         view.draw()
         time.sleep(.001)
