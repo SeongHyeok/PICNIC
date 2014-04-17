@@ -113,7 +113,7 @@ class OlinopolyModel:
     def __init__(self):
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
-        self.mouseover_map_block = 0  # 0 for indicating not-showing
+        self.mouseover_map_block = -1  # 0 for indicating not-showing
 
         #self.num_of_teams = g_max_team_num
         self.num_of_teams = 1
@@ -381,18 +381,19 @@ class OlinopolyView:
 
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
-            msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
-            w, h = font_map_block_info.size(msg)
-            x, y = pygame.mouse.get_pos()
-            title = font_map_block_info.render(msg, True, (10, 10, 115))
+            if self.model.mouseover_map_block >= 0:
+                msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
+                w, h = font_map_block_info.size(msg)
+                x, y = pygame.mouse.get_pos()
+                title = font_map_block_info.render(msg, True, (10, 10, 115))
 
-            pygame.draw.rect(
-                self.screen,
-                pygame.Color(0, 0, 0),
-                (x - 5, y - 5, w + 10, h + 10),
-                1
-            )
-            self.screen.blit(title, (x, y))
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(0, 0, 0),
+                    (x - 5, y - 5, w + 10, h + 10),
+                    1
+                )
+                self.screen.blit(title, (x, y))
 
         pygame.display.flip()
 
@@ -420,7 +421,7 @@ class OlinopolyMouseOverController:
         self.model.mouseover_map_block = num
 
     def check(self):
-        self.model.mouseover_map_block = 0
+        self.model.mouseover_map_block = -1
 
         x, y = pygame.mouse.get_pos()
         if g_map_block_width < x < g_screen_board_width - g_map_block_width:
