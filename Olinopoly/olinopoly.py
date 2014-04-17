@@ -583,12 +583,6 @@ if __name__ == "__main__":
                     for player in team:
                         player.pressed(x,y)
 
-                # print x, y
-#                for marker in model.markers:
-#                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:
-#                        if marker.rect[1] < y < marker.rect[1] + g_screen_height*0.2/2:
-#                            marker.is_visible = False
-#                            model.createMarkerOnBoard(marker.team, marker.player)
 
         view.draw()
         time.sleep(.001)
