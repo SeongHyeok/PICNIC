@@ -33,8 +33,10 @@ logger = logging.getLogger(__name__)
 # Global variabless
 ############################################################################
 # Path
-g_image_dir_path = os.path.join(os.curdir, "img/map")
-g_marker_image_dir_path = os.path.join(os.curdir, "img/marker")
+g_image_dir_path = os.path.join(os.curdir, "img")
+g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
+g_marker_image_dir_path = os.path.join(g_image_dir_path, "marker")
+g_olin_logo_dir_path = os.path.join(g_image_dir_path, "logo")
 
 # Screen
 g_screen_board_width = 850
@@ -64,6 +66,23 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
 ]
 g_map_enable_softdsg_blinking = True
 
+# Button
+g_button_rect = (
+    g_screen_board_width * 0.4,
+    g_screen_board_height * 0.2,
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.2,
+)
+
+# Olin Logo
+g_olin_logo_rect = (
+    g_screen_board_width * 0.4,
+    g_screen_board_height * 0.4,
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.2,
+
+)
+
 # Chance Card
 g_chance_card_rect = (  # DO NOT CHANGE
     g_screen_board_width * 0.6,
@@ -79,14 +98,6 @@ g_softdsg_card_position = [35]
 g_complete_area_rect = (
     g_screen_board_width * 0.2,
     g_screen_board_height * 0.6,
-    g_screen_board_width * 0.3,
-    g_screen_board_height * 0.2
-)
-
-# Button
-g_button_rect = (
-    g_screen_board_width * 0.2,
-    g_screen_board_height * 0.3,
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
@@ -206,7 +217,10 @@ class OlinopolyModel:
 
         ##############################
         # Create Olin Logo
-        #self.olinlogo = OlinLogo()
+
+        self.olin_logo = OlinLogo(
+            g_olin_logo_rect, 'i', True
+        )
 
     def moveMarker(self, team, player, target_pos):
         if target_pos >= g_map_num_blocks:
@@ -230,21 +244,22 @@ class OlinopolyModel:
         logger.debug("team: %d / player: %d / target: %d / prev: %s" % (team, player, target_pos, str(prev_pos)))
 
     def blinkSoftDsg(self):
-        for i in g_softdsg_card_position:
-            if i < len(self.map_blocks):
-                map_block = self.map_blocks[i]
-                if map_block.current_color == 'r':
-                    map_block.current_color = 'g'
-                elif map_block.current_color == 'g':
-                    map_block.current_color = 'b'
-                elif map_block.current_color == 'b':
-                    map_block.current_color = 'r'
-                img_path = os.path.join(g_image_dir_path, "%d%c.png" % (i, map_block.current_color))
-                logger.debug("next image: %s" % (img_path))
-                map_block.img = pygame.transform.scale(
-                    pygame.image.load(img_path),
-                    (map_block.rect[2] - g_line_width * 2, map_block.rect[3] - g_line_width * 2)
-                )
+        if g_map_enable_softdsg_blinking:
+            for i in g_softdsg_card_position:
+                if i < len(self.map_blocks):
+                    map_block = self.map_blocks[i]
+                    if map_block.current_color == 'r':
+                        map_block.current_color = 'g'
+                    elif map_block.current_color == 'g':
+                        map_block.current_color = 'b'
+                    elif map_block.current_color == 'b':
+                        map_block.current_color = 'r'
+                    img_path = os.path.join(g_map_block_dir_path, "%d%c.png" % (i, map_block.current_color))
+                    logger.debug("next image: %s" % (img_path))
+                    map_block.img = pygame.transform.scale(
+                        pygame.image.load(img_path),
+                        (map_block.rect[2] - g_line_width * 2, map_block.rect[3] - g_line_width * 2)
+                    )
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -264,12 +279,12 @@ class MapBlock(Drawable):
         # image
         if c_or_i == 'i':
             if num in g_chance_card_position:
-                img_path = os.path.join(g_image_dir_path, "chance.png")
+                img_path = os.path.join(g_map_block_dir_path, "chance.png")
             elif num in g_softdsg_card_position:
                 self.current_color = 'r'
-                img_path = os.path.join(g_image_dir_path, "%d%c.png" % (num, self.current_color))
+                img_path = os.path.join(g_map_block_dir_path, "%d%c.png" % (num, self.current_color))
             else:
-                img_path = os.path.join(g_image_dir_path, "%d.png" % (num))
+                img_path = os.path.join(g_map_block_dir_path, "%d.png" % (num))
             self.img = pygame.transform.scale(
                 pygame.image.load(img_path),
                 (self.rect[2] - g_line_width * 2, self.rect[3] - g_line_width * 2)
@@ -304,7 +319,7 @@ class ChanceCard(Drawable):
         super(ChanceCard, self).__init__(rect, c_or_i, is_visible)
         self.size = g_chance_card_num
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_image_dir_path, "chance.png")),
+            pygame.image.load(os.path.join(g_map_block_dir_path, "chance.png")),
             (int(self.rect[2] - g_line_width * 2), int(self.rect[3] - g_line_width * 2))
         )
 
@@ -315,6 +330,10 @@ class CompleteArea(Drawable):
 class OlinLogo(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(OlinLogo, self).__init__(rect, c_or_i, is_visible)
+        self.img = pygame.transform.scale(
+            pygame.image.load(os.path.join(g_olin_logo_dir_path, "olinopoly_logo.png")),
+            (int(self.rect[2]),int(self.rect[3]))
+        )
 
 ############################################################################
 # View Classes
@@ -402,13 +421,25 @@ class OlinopolyView:
         self.model.Button1.create_button(
             self.screen,
             (107,142,35),
-            g_screen_board_width * 0.4,
-            g_screen_board_height * 0.2,
-            g_screen_board_width * 0.2,
-            g_screen_board_height * 0.2,
+            g_button_rect[0],
+            g_button_rect[1],
+            g_button_rect[2],
+            g_button_rect[3],
             20,
             "Roll Dice!",
             (255,255,255)
+        )
+
+        # Olinopoly Logo
+        self.screen.blit(
+            self.model.olin_logo.img,
+            (self.model.olin_logo.rect[0], self.model.olin_logo.rect[1])
+        )
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.olin_logo.rect,
+            1
         )
 
         # Mouseover Map Block Information
