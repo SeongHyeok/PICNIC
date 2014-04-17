@@ -45,3 +45,24 @@ class Button:
                 else: return False
             else: return False
         else: return False
+
+
+ #msg = "Dice number: %d" % (self.model.dice_number)
+  #              w, h = font_temporary_dice.size(msg)
+   #             title = font_temporary_dice.render(msg, True, (0, 0, 0))
+    #            self.screen.blit(
+     #               title,
+      #              (g_button_rect[0],
+       #              g_button_rect[1] - g_button_rect[3] - 10 + g_button_rect[3]/2
+        #             )
+         #       )
+            #pygame.draw.rect(
+             #   self.screen,
+              #  pygame.Color(0, 0, 0),
+               # (g_button_rect[0],
+                # g_button_rect[1] - g_button_rect[3] - 10,
+                # g_button_rect[2] + w,
+                # g_button_rect[3]/5 + h
+                 #),
+               # 1
+            #)

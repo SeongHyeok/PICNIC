@@ -544,6 +544,7 @@ if __name__ == "__main__":
     screen = pygame.display.set_mode(size)
 
     font_map_block_info = pygame.font.SysFont('Verdana', 16, False)
+    font_temporary_dice = font_map_block_info
 
     # MVC objects
     model = OlinopolyModel()
