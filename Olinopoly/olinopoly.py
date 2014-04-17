@@ -123,6 +123,9 @@ g_max_team_num = 4
 
 class OlinopolyModel:
     def __init__(self):
+        #self.num_of_teams = g_max_team_num
+        self.num_of_teams = 1
+
         # Current state of game board
         # 0: Wait for other player
         # 1: Ready for rolling dice
@@ -137,8 +140,7 @@ class OlinopolyModel:
         self.prev_mouseover_map_block = 0
         self.mouseover_map_block = -1  # -1 for indicating not-showing
 
-        #self.num_of_teams = g_max_team_num
-        self.num_of_teams = 1
+        self.dice_number = None
 
         ##############################
         # Create map blocks
@@ -222,6 +224,9 @@ class OlinopolyModel:
             g_olin_logo_rect, 'i', True
         )
 
+    def setState(self, target_state):
+        self.current_state = target_state
+
     def moveMarker(self, team, player, target_pos):
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
@@ -255,7 +260,7 @@ class OlinopolyModel:
                     elif map_block.current_color == 'b':
                         map_block.current_color = 'r'
                     img_path = os.path.join(g_map_block_dir_path, "%d%c.png" % (i, map_block.current_color))
-                    logger.debug("next image: %s" % (img_path))
+                    #logger.debug("next image: %s" % (img_path))
                     map_block.img = pygame.transform.scale(
                         pygame.image.load(img_path),
                         (map_block.rect[2] - g_line_width * 2, map_block.rect[3] - g_line_width * 2)
@@ -530,12 +535,8 @@ class OlinopolyDiceController:
         self.model = model
 
     def rollDice(self):
-        dice_num = random.randint(1, 6)
-        logger.debug("dice number: %d" % (dice_num))
-
-        team = self.model.my_team_number
-        player = self.model.current_marker
-        self.model.moveMarker(team, player, self.model.markers[team][player].block_pos + dice_num)
+        self.model.dice_number = random.randint(1, 6)
+        logger.debug("set dice num: %d" % (self.model.dice_number))
 
 ############################################################################
 # Main
@@ -572,29 +573,35 @@ if __name__ == "__main__":
                 running = False
                 break
 
-            if event.type == MOUSEMOTION:
-                controller_mouse.handleMouseEvent(event)
-
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
 
             if event.type == USEREVENT + 2:
                 model.blinkSoftDsg()
 
-            if event.type == MOUSEBUTTONDOWN:
-                if model.Button1.pressed(pygame.mouse.get_pos()):
-                    controller_dice.rollDice()
-                x,y = pygame.mouse.get_pos()
-                for team in model.markers:
-                    for player in team:
-                        player.pressed(x,y)
+            if event.type == MOUSEMOTION:
+                controller_mouse.handleMouseEvent(event)
 
-                # print x, y
-#                for marker in model.markers:
-#                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:
-#                        if marker.rect[1] < y < marker.rect[1] + g_screen_height*0.2/2:
-#                            marker.is_visible = False
-#                            model.createMarkerOnBoard(marker.team, marker.player)
+            if event.type == MOUSEBUTTONDOWN:
+                x, y = pygame.mouse.get_pos()
+                if model.current_state == 1 and model.Button1.pressed((x, y)):
+                    controller_dice.rollDice()
+                    model.setState(2)
+                elif model.current_state == 2:
+                    for player in model.markers[model.my_team_number]:
+                        if player.pressed(x, y):
+                            team = player.team
+                            player = player.player
+                            logger.debug("dice num: %d" % (model.dice_number))
+                            if model.markers[team][player].block_pos == None:
+                                target_pos = model.dice_number
+                            else:
+                                target_pos = model.markers[team][player].block_pos + model.dice_number
+                            model.moveMarker(
+                                team, player, target_pos
+                            )
+                            model.setState(1)
+                            break
 
         view.draw()
         time.sleep(.001)
