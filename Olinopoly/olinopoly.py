@@ -201,7 +201,6 @@ class OlinopolyModel:
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         prev_pos = self.markers[team][player].block_pos
-        self.markers[team][player].block_pos = target_pos
 
         # add to current map block
         if target_pos != -1:
@@ -214,6 +213,10 @@ class OlinopolyModel:
                 if t == team and p == player:
                     self.map_blocks[prev_pos].markers_on_block.remove([t, p])
                     break
+        self.markers[team][player].block_pos = target_pos
+        self.markers[team][player].prev_block_pos= prev_pos
+
+        logger.debug("team: %d / player: %d / target: %d / prev: %s" % (team, player, target_pos, str(prev_pos)))
 
     def createMarkerOnBoard(self, team, player):
         self.team_one_markers_board = []
@@ -267,6 +270,13 @@ class Marker(Drawable):
             )
         else:
             self.img = None
+
+    def reloadImage(self):
+        self.img = pygame.transform.scale(
+            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (self.player))),
+            (int(self.rect[2]),int(self.rect[3]))
+        )
+
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -322,8 +332,15 @@ class OlinopolyView:
                 )
             # Update marker position
             for marker in map_block.markers_on_block:
-                marker[0] = map_block.rect[0]
-                marker[1] = map_block.rect[1]
+                team, player = marker
+                self.model.markers[team][player].rect = (
+                    map_block.rect[0],
+                    map_block.rect[1],
+                    map_block.rect[2] / 2,
+                    map_block.rect[3] / 2
+                )
+                if self.model.markers[team][player].prev_block_pos == None:
+                    self.model.markers[team][player].reloadImage()
 
         # Marker
         for i in range(self.model.num_of_teams):
