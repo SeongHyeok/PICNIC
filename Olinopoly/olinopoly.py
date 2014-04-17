@@ -67,7 +67,7 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
 g_map_enable_softdsg_blinking = True
 
 # Button
-g_button_rect = (
+g_button_roll_dice_rect = (
     g_screen_board_width * 0.4,
     g_screen_board_height * 0.2,
     g_screen_board_width * 0.2,
@@ -213,9 +213,9 @@ class OlinopolyModel:
         )
 
         ##############################
-        # Create button
+        # Create roll dice button
 
-        self.Button1 = Buttons.Button()
+        self.button_roll_dice = Buttons.Button()
 
         ##############################
         # Create Olin Logo
@@ -227,7 +227,7 @@ class OlinopolyModel:
     def setState(self, target_state):
         self.current_state = target_state
 
-    def moveMarker(self, team, player, target_pos):
+    def moveMarker(self, team, player, target_pos, move_other_together=False):
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         prev_pos = self.markers[team][player].block_pos
@@ -247,6 +247,12 @@ class OlinopolyModel:
         self.markers[team][player].prev_block_pos= prev_pos
 
         logger.debug("team: %d / player: %d / target: %d / prev: %s" % (team, player, target_pos, str(prev_pos)))
+
+        if move_other_together and prev_pos != None:
+            for marker in self.map_blocks[prev_pos].markers_on_block:
+                t, p = marker
+                self.moveMarker(t, p, target_pos)
+            self.map_blocks.sort()
 
     def blinkSoftDsg(self):
         if g_map_enable_softdsg_blinking:
@@ -391,13 +397,24 @@ class OlinopolyView:
                     map_block.rect,
                     1
                 )
-            # Update marker position
-            for marker in map_block.markers_on_block:
+            # Update position of marker based on position of map block
+            for i in range(len(map_block.markers_on_block)):
+                marker = map_block.markers_on_block[i]
                 team, player = marker
-                # [TODO] Consider multiple blocks
+                if i == 0:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1]
+                elif i == 1:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1]
+                elif i == 2:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1] + g_map_block_height / 2
+                elif i == 3:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1] + g_map_block_height / 2
                 self.model.markers[team][player].rect = (
-                    map_block.rect[0],
-                    map_block.rect[1],
+                    x, y,
                     map_block.rect[2] / 2,
                     map_block.rect[3] / 2
                 )
@@ -439,13 +456,13 @@ class OlinopolyView:
         )
 
         # Button
-        self.model.Button1.create_button(
+        self.model.button_roll_dice.create_button(
             self.screen,
             (107,142,35),
-            g_button_rect[0],
-            g_button_rect[1],
-            g_button_rect[2],
-            g_button_rect[3],
+            g_button_roll_dice_rect[0],
+            g_button_roll_dice_rect[1],
+            g_button_roll_dice_rect[2],
+            g_button_roll_dice_rect[3],
             20,
             "Roll Dice!",
             (255,255,255)
@@ -578,7 +595,7 @@ if __name__ == "__main__":
 
             if event.type == MOUSEBUTTONDOWN:
                 x, y = pygame.mouse.get_pos()
-                if model.current_state == 1 and model.Button1.pressed((x, y)):
+                if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
                     controller_dice.rollDice()
                     model.setState(2)
                 elif model.current_state == 2:
@@ -592,7 +609,7 @@ if __name__ == "__main__":
                             else:
                                 target_pos = model.markers[team][player].block_pos + model.dice_number
                             model.moveMarker(
-                                team, player, target_pos
+                                team, player, target_pos, True
                             )
                             model.setState(1)
                             break
@@ -602,3 +619,6 @@ if __name__ == "__main__":
     # While end
     ####################
     pygame.quit()
+
+# [TODO] completed marker
+# [TODO] overlapped markers
