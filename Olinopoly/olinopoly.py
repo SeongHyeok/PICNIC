@@ -53,6 +53,7 @@ g_map_num_blocks_in_line_min = 5    # DO NOT CHANGE
 assert \
     g_map_num_blocks_in_line_min <= g_map_num_blocks_in_line and \
     g_map_num_blocks_in_line_max <= g_map_num_blocks_in_line_max
+g_map_num_blocks = g_map_num_blocks_in_line * 4 - 4    # DO NOT CHANGE
 g_map_block_width = g_screen_board_width / g_map_num_blocks_in_line     # DO NOT CHANGE
 g_map_block_height = g_screen_board_height / g_map_num_blocks_in_line   # DO NOT CHANGE
 g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
@@ -70,7 +71,7 @@ g_chance_card_rect = (  # DO NOT CHANGE
     g_screen_board_height * 0.2
 )
 g_chance_card_num = 30
-g_chance_card_position = [8, 14, 22, 30]
+g_chance_card_position = [7, 13, 21, 29]
 
 # Complete area (for completed markers)
 g_complete_area_rect = (
@@ -122,7 +123,7 @@ class OlinopolyModel:
         # Powerful feature of our code is that it is generic for number!
 
         self.map_blocks = []
-        num = 1
+        num = 0
         for i in range(4):    # 0 ~ 3 (bottom, left, top and right)
             init_x, init_y = g_map_block_initial_positions[i]
 
@@ -152,7 +153,7 @@ class OlinopolyModel:
 
         for i in range(0, len(self.map_blocks)):
             logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
-                i + 1, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
+                i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
             )
 
         ##############################
@@ -160,17 +161,17 @@ class OlinopolyModel:
 
         self.markers = []
         for i in range(g_max_team_num):
-            self.markers.append([])
+            self.markers.append([]) # for each team
 
         for i in range(self.num_of_teams):
             for j in range(4):
                 init_x, init_y = g_marker_initial_positions[j]
                 marker = Marker(
                     (init_x, init_y, g_screen_status_width / 4, g_screen_board_height * 0.2 / 2),
-                    'i', True, i + 1, j + 1, None
+                    'i', True, i, j, None
                 )
                 self.markers[i].append(marker)
-        #self.createMarkerOnBoard(1, 1)
+            self.moveMarker(i, 0, 0)
 
         ##############################
         # Create chance card
@@ -195,12 +196,29 @@ class OlinopolyModel:
         # Create Olin Logo
         #self.olinlogo = OlinLogo()
 
+    def moveMarker(self, team, player, target_pos):
+        if target_pos >= g_map_num_blocks:
+            target_pos = -1 # -1 means completed
+        prev_pos = self.markers[team][player].block_pos
+        self.markers[team][player].block_pos = target_pos
+
+        # add to current map block
+        if target_pos != -1:
+            self.map_blocks[target_pos].markers_on_block.append((team, player))
+
+        # remove from previous map block
+        for marker in self.map_blocks[prev_pos].markers_on_block:
+            t, p = marker
+            if t == team and p == player:
+                self.map_blocks[prev_pos].markers_on_block.remove((t, p))
+                break
+
     def createMarkerOnBoard(self, team, player):
         self.team_one_markers_board = []
         new_marker = Marker(
                         (g_marker_start_x,g_marker_start_y,g_marker_height, g_marker_width),
-                        "i", True, team, player, 1
-                    )
+                        "i", True, team, player, 0
+        )
         self.team_one_markers_board.append(new_marker)
 
 class Drawable(object):
@@ -216,7 +234,7 @@ class MapBlock(Drawable):
         self.num = num
 
         # count markers that are on a block
-        self.marker_on_block = []   # pairs of (team, player)
+        self.markers_on_block = []   # pairs of (team, player)
 
         # image
         if c_or_i == 'i':
@@ -245,13 +263,6 @@ class Marker(Drawable):
             )
         else:
             self.img = None
-
-    def moveMarker(self, dice_num, prev_block_num):
-        self.block_pos = prev_block_num + dice_num
-        if self.block_pos > 36:
-            self.is_visible = False
-        new_prev_block_num = self.block_pos
-        return self.block_pos
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -305,6 +316,24 @@ class OlinopolyView:
                     map_block.rect,
                     1
                 )
+            # Update marker position
+            for marker in map_block.markers_on_block:
+                marker.x = map_block.rect[0]
+                marker.y = map_block.rect[1]
+
+        # Marker
+        for i in range(self.model.num_of_teams):
+            for marker in self.model.markers[i]:
+                self.screen.blit(
+                    marker.img,
+                    (marker.rect[0], marker.rect[1])
+                )
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19, 110, 13),
+                    marker.rect,
+                    1
+                )
 
         # Chance card
         self.screen.blit(
@@ -344,20 +373,6 @@ class OlinopolyView:
                     1
                 )
                 self.screen.blit(title, (x, y))
-
-        # Marker
-        for i in range(self.model.num_of_teams):
-            for marker in self.model.markers[i]:
-                self.screen.blit(
-                    marker.img,
-                    (marker.rect[0], marker.rect[1])
-                )
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19, 110, 13),
-                    marker.rect,
-                    1
-                )
 
         pygame.display.flip()
 
@@ -457,7 +472,7 @@ if __name__ == "__main__":
 
             if event.type == MOUSEBUTTONDOWN:
                 if model.Button1.pressed(pygame.mouse.get_pos()):
-                    dice_num = random.randint(1,6)
+                    dice_num = random.randint(1, 6)
                     logger.debug("dice number: %d" % (dice_num))
 #                    if len(model.team_one_markers_board) >= 1:
 #                        if event.type == MOUSEBUTTONDOWN:
