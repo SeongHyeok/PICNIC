@@ -113,7 +113,7 @@ class OlinopolyModel:
     def __init__(self):
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
-        self.mouseover_map_block = -1  # 0 for indicating not-showing
+        self.mouseover_map_block = -1  # -1 for indicating not-showing
 
         #self.num_of_teams = g_max_team_num
         self.num_of_teams = 1
