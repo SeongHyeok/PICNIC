@@ -451,12 +451,6 @@ class OlinopolyView:
             self.model.olin_logo.img,
             (self.model.olin_logo.rect[0], self.model.olin_logo.rect[1])
         )
-        pygame.draw.rect(
-            self.screen,
-            pygame.Color(19, 110, 13),
-            self.model.olin_logo.rect,
-            1
-        )
 
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
