@@ -333,6 +333,7 @@ class OlinopolyView:
             # Update marker position
             for marker in map_block.markers_on_block:
                 team, player = marker
+                # [TODO] Consider multiple blocks
                 self.model.markers[team][player].rect = (
                     map_block.rect[0],
                     map_block.rect[1],
@@ -445,13 +446,19 @@ class OlinopolyMouseOverController:
         else:
             pass
 
-'''class MarkerController:
+class OlinopolyDiceController:
+    """ """
     def __init__(self, model):
         self.model = model
 
-    def markerclicked(self):
-        x,y = pygame.mouse.get_pos()
-        if'''
+    def rollDice(self):
+        dice_num = random.randint(1, 6)
+        logger.debug("dice number: %d" % (dice_num))
+
+        target_marker = [0, 0]  # team, player
+        t = target_marker[0]
+        p = target_marker[1]
+        self.model.moveMarker(t, p, self.model.markers[t][p].block_pos + dice_num)
 
 ############################################################################
 # Main
@@ -471,6 +478,7 @@ if __name__ == "__main__":
     view = OlinopolyView(model, screen)
     controller_mouse = OlinopolyMouseController(model)
     controller_mouse_over = OlinopolyMouseOverController(model)
+    controller_dice = OlinopolyDiceController(model)
 
     # Timer for events
     # - Mouse over
@@ -493,23 +501,14 @@ if __name__ == "__main__":
 
             if event.type == MOUSEBUTTONDOWN:
                 if model.Button1.pressed(pygame.mouse.get_pos()):
-                    dice_num = random.randint(1, 6)
-                    logger.debug("dice number: %d" % (dice_num))
-#                    if len(model.team_one_markers_board) >= 1:
-#                        if event.type == MOUSEBUTTONDOWN:
-#                            a,b = pygame.mouse.get_pos()
-#                            for marker_board in model.team_one_markers_board:
-#                                if marker_board.rect[0] < a < marker_board.rect[0] + g_marker_width:
-#                                    if marker_board.rect[1] < b < marker_board.rect[1] + g_marker_height:
-#                                        marker_board.moveMarker(dice_num, marker_board.board_pos)
-
-                x,y = pygame.mouse.get_pos()
+                    controller_dice.rollDice()
+#                x,y = pygame.mouse.get_pos()
                 # print x, y
-                for marker in model.markers:
-                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:
-                        if marker.rect[1] < y < marker.rect[1] + g_screen_height*0.2/2:
-                            marker.is_visible = False
-                            model.createMarkerOnBoard(marker.team, marker.player)
+#                for marker in model.markers:
+#                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:
+#                        if marker.rect[1] < y < marker.rect[1] + g_screen_height*0.2/2:
+#                            marker.is_visible = False
+#                            model.createMarkerOnBoard(marker.team, marker.player)
 
         view.draw()
         time.sleep(.001)
