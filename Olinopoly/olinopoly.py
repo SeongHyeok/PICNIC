@@ -72,6 +72,7 @@ g_chance_card_rect = (  # DO NOT CHANGE
 )
 g_chance_card_num = 30
 g_chance_card_position = [7, 13, 21, 29]
+g_softdsg_card_position = [35]
 
 # Complete area (for completed markers)
 g_complete_area_rect = (
@@ -204,14 +205,15 @@ class OlinopolyModel:
 
         # add to current map block
         if target_pos != -1:
-            self.map_blocks[target_pos].markers_on_block.append((team, player))
+            self.map_blocks[target_pos].markers_on_block.append([team, player])
 
         # remove from previous map block
-        for marker in self.map_blocks[prev_pos].markers_on_block:
-            t, p = marker
-            if t == team and p == player:
-                self.map_blocks[prev_pos].markers_on_block.remove((t, p))
-                break
+        if prev_pos != None:
+            for marker in self.map_blocks[prev_pos].markers_on_block:
+                t, p = marker
+                if t == team and p == player:
+                    self.map_blocks[prev_pos].markers_on_block.remove([t, p])
+                    break
 
     def createMarkerOnBoard(self, team, player):
         self.team_one_markers_board = []
@@ -234,12 +236,14 @@ class MapBlock(Drawable):
         self.num = num
 
         # count markers that are on a block
-        self.markers_on_block = []   # pairs of (team, player)
+        self.markers_on_block = []   # pairs of [team, player]
 
         # image
         if c_or_i == 'i':
             if num in g_chance_card_position:
                 img_path = os.path.join(g_image_dir_path, "chance.png")
+            elif num in g_softdsg_card_position:
+                img_path = os.path.join(g_image_dir_path, "%dr.png" % (num))
             else:
                 img_path = os.path.join(g_image_dir_path, "%d.png" % (num))
             self.img = pygame.transform.scale(
@@ -318,8 +322,8 @@ class OlinopolyView:
                 )
             # Update marker position
             for marker in map_block.markers_on_block:
-                marker.x = map_block.rect[0]
-                marker.y = map_block.rect[1]
+                marker[0] = map_block.rect[0]
+                marker[1] = map_block.rect[1]
 
         # Marker
         for i in range(self.model.num_of_teams):
@@ -360,19 +364,18 @@ class OlinopolyView:
 
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
-            if self.model.mouseover_map_block != 0:
-                msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
-                w, h = font_map_block_info.size(msg)
-                x, y = pygame.mouse.get_pos()
-                title = font_map_block_info.render(msg, True, (10, 10, 115))
+            msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
+            w, h = font_map_block_info.size(msg)
+            x, y = pygame.mouse.get_pos()
+            title = font_map_block_info.render(msg, True, (10, 10, 115))
 
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(0, 0, 0),
-                    (x - 5, y - 5, w + 10, h + 10),
-                    1
-                )
-                self.screen.blit(title, (x, y))
+            pygame.draw.rect(
+                self.screen,
+                pygame.Color(0, 0, 0),
+                (x - 5, y - 5, w + 10, h + 10),
+                1
+            )
+            self.screen.blit(title, (x, y))
 
         pygame.display.flip()
 
@@ -406,20 +409,20 @@ class OlinopolyMouseOverController:
         if g_map_block_width < x < g_screen_board_width - g_map_block_width:
             #logger.debug("middle")
             if 0 <= y <= g_map_block_height:
-                self.onMapBlock(g_map_num_blocks_in_line * 2 - 1 + x / g_map_block_width)
+                self.onMapBlock(g_map_num_blocks_in_line * 2 - 2 + x / g_map_block_width)
             elif g_screen_board_height - g_map_block_height <= y:
-                self.onMapBlock(g_map_num_blocks_in_line - x / g_map_block_width)
+                self.onMapBlock(g_map_num_blocks_in_line - 1 - x / g_map_block_width)
             else:
                 pass
             pass
         elif x <= g_map_block_width:
             #logger.debug("left")
-            self.onMapBlock(g_map_num_blocks_in_line - 1 + (g_map_num_blocks_in_line - y / g_map_block_height))
+            self.onMapBlock(g_map_num_blocks_in_line - 2 + (g_map_num_blocks_in_line - y / g_map_block_height))
         elif g_screen_board_width - g_map_block_width <= x <= g_screen_board_width:
             #logger.debug("right")
-            num = g_map_num_blocks_in_line * 3 - 2 + (y / g_map_block_height)
+            num = g_map_num_blocks_in_line * 3 - 3 + (y / g_map_block_height)
             if num == g_map_num_blocks_in_line * 4 - 3:
-                num = 1
+                num = 0
             self.onMapBlock(num)
         else:
             pass
