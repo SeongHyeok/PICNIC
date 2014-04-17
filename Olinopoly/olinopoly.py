@@ -421,7 +421,7 @@ class OlinopolyMouseOverController:
         elif g_screen_board_width - g_map_block_width <= x <= g_screen_board_width:
             #logger.debug("right")
             num = g_map_num_blocks_in_line * 3 - 3 + (y / g_map_block_height)
-            if num == g_map_num_blocks_in_line * 4 - 3:
+            if num == g_map_num_blocks_in_line * 4 - 4:
                 num = 0
             self.onMapBlock(num)
         else:
