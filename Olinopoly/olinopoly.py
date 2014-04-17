@@ -277,6 +277,22 @@ class Marker(Drawable):
             (int(self.rect[2]),int(self.rect[3]))
         )
 
+    def pressed(self, x, y):
+        if x > self.rect[0]:
+            if y > self.rect[1]:
+                if x < self.rect[0] + self.rect[2]:
+                    if y < self.rect[1] + self.rect[3]:
+                        print "%d Marker chosen for team %d " % (self.player, self.team)
+                        return True
+                    else:
+                        return False
+                else:
+                   return False
+            else:
+               return False
+        else:
+            return False
+
 
 class ChanceCard(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -502,7 +518,11 @@ if __name__ == "__main__":
             if event.type == MOUSEBUTTONDOWN:
                 if model.Button1.pressed(pygame.mouse.get_pos()):
                     controller_dice.rollDice()
-#                x,y = pygame.mouse.get_pos()
+                x,y = pygame.mouse.get_pos()
+                for team in model.markers:
+                    for player in team:
+                        player.pressed(x,y)
+
                 # print x, y
 #                for marker in model.markers:
 #                    if marker.rect[0] < x < marker.rect[0] + g_screen_status_width/4:

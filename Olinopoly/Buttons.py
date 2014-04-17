@@ -17,7 +17,7 @@ class Button:
         return surface
 
     def draw_button(self, surface, color, length, height, x, y, width):
-        for i in range(1,10):
+        for i in range(1,3):
             s = pygame.Surface((length+(i*2),height+(i*2)))
             s.fill(color)
             alpha = (255/(i+2))
