@@ -62,6 +62,7 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
     (0, 0),
     (g_screen_board_width - g_map_block_width, 0)
 ]
+g_map_enable_softdsg_blinking = True
 
 # Chance Card
 g_chance_card_rect = (  # DO NOT CHANGE
@@ -111,6 +112,16 @@ g_max_team_num = 4
 
 class OlinopolyModel:
     def __init__(self):
+        # Current state of game board
+        # 0: Wait for other player
+        # 1: Ready for rolling dice
+        # 2: Wait for choosing marker
+        # N: ...
+        self.current_state = 1
+
+        self.my_team_number = 0
+        self.current_marker = 0
+
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
         self.mouseover_map_block = -1  # -1 for indicating not-showing
@@ -218,13 +229,22 @@ class OlinopolyModel:
 
         logger.debug("team: %d / player: %d / target: %d / prev: %s" % (team, player, target_pos, str(prev_pos)))
 
-    def createMarkerOnBoard(self, team, player):
-        self.team_one_markers_board = []
-        new_marker = Marker(
-                        (g_marker_start_x,g_marker_start_y,g_marker_height, g_marker_width),
-                        "i", True, team, player, 0
-        )
-        self.team_one_markers_board.append(new_marker)
+    def blinkSoftDsg(self):
+        for i in g_softdsg_card_position:
+            if i < len(self.map_blocks):
+                map_block = self.map_blocks[i]
+                if map_block.current_color == 'r':
+                    map_block.current_color = 'g'
+                elif map_block.current_color == 'g':
+                    map_block.current_color = 'b'
+                elif map_block.current_color == 'b':
+                    map_block.current_color = 'r'
+                img_path = os.path.join(g_image_dir_path, "%d%c.png" % (i, map_block.current_color))
+                logger.debug("next image: %s" % (img_path))
+                map_block.img = pygame.transform.scale(
+                    pygame.image.load(img_path),
+                    (map_block.rect[2] - g_line_width * 2, map_block.rect[3] - g_line_width * 2)
+                )
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -246,7 +266,8 @@ class MapBlock(Drawable):
             if num in g_chance_card_position:
                 img_path = os.path.join(g_image_dir_path, "chance.png")
             elif num in g_softdsg_card_position:
-                img_path = os.path.join(g_image_dir_path, "%dr.png" % (num))
+                self.current_color = 'r'
+                img_path = os.path.join(g_image_dir_path, "%d%c.png" % (num, self.current_color))
             else:
                 img_path = os.path.join(g_image_dir_path, "%d.png" % (num))
             self.img = pygame.transform.scale(
@@ -378,7 +399,17 @@ class OlinopolyView:
         )
 
         # Button
-        self.model.Button1.create_button(self.screen, (107,142,35),  g_screen_board_width * 0.4,  g_screen_board_height * 0.2,  g_screen_board_width * 0.2,     g_screen_board_height * 0.2,    0,        "Roll Dice!", (255,255,255))
+        self.model.Button1.create_button(
+            self.screen,
+            (107,142,35),
+            g_screen_board_width * 0.4,
+            g_screen_board_height * 0.2,
+            g_screen_board_width * 0.2,
+            g_screen_board_height * 0.2,
+            20,
+            "Roll Dice!",
+            (255,255,255)
+        )
 
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
@@ -455,10 +486,9 @@ class OlinopolyDiceController:
         dice_num = random.randint(1, 6)
         logger.debug("dice number: %d" % (dice_num))
 
-        target_marker = [0, 0]  # team, player
-        t = target_marker[0]
-        p = target_marker[1]
-        self.model.moveMarker(t, p, self.model.markers[t][p].block_pos + dice_num)
+        team = self.model.my_team_number
+        player = self.model.current_marker
+        self.model.moveMarker(team, player, self.model.markers[team][player].block_pos + dice_num)
 
 ############################################################################
 # Main
@@ -481,8 +511,10 @@ if __name__ == "__main__":
     controller_dice = OlinopolyDiceController(model)
 
     # Timer for events
-    # - Mouse over
+    # 1 - Mouse over
+    # 2 - Blinking SoftDsg
     pygame.time.set_timer(USEREVENT + 1, 500)
+    pygame.time.set_timer(USEREVENT + 2, 300)
 
     running = True
     ####################
@@ -498,6 +530,9 @@ if __name__ == "__main__":
 
             if event.type == USEREVENT + 1:
                 controller_mouse_over.check()
+
+            if event.type == USEREVENT + 2:
+                model.blinkSoftDsg()
 
             if event.type == MOUSEBUTTONDOWN:
                 if model.Button1.pressed(pygame.mouse.get_pos()):
