@@ -241,6 +241,9 @@ class OlinopolyModel:
             target_pos = -1 # -1 means completed
         prev_pos = self.markers[team][player].block_pos
 
+        self.markers[team][player].block_pos = target_pos
+        self.markers[team][player].prev_block_pos = prev_pos
+
         # add to current map block
         if target_pos != -1:
             self.map_blocks[target_pos].markers_on_block.append([team, player])
@@ -248,8 +251,18 @@ class OlinopolyModel:
             map_block = self.map_blocks[target_pos]
             markers = map_block.markers_on_block
             for i in range(len(markers)):
+                logger.debug("i: %d" % (i))
                 marker = markers[i]
                 team, player = marker
+
+                if 0 < target_pos < g_map_num_blocks - 1:
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos - 1, self.map_blocks[target_pos - 1].rect[0], self.map_blocks[target_pos - 1].rect[1]))
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos, self.map_blocks[target_pos].rect[0], self.map_blocks[target_pos].rect[1]))
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos + 1, self.map_blocks[target_pos + 1].rect[0], self.map_blocks[target_pos + 1].rect[1]))
+
                 if i == 0:
                     x = map_block.rect[0]
                     y = map_block.rect[1]
@@ -262,6 +275,8 @@ class OlinopolyModel:
                 elif i == 3:
                     x = map_block.rect[0] + g_map_block_width / 2
                     y = map_block.rect[1] + g_map_block_height / 2
+                logger.debug("x, y = %d, %d" % (x, y))
+                logger.debug("x, y = %d, %d" % (map_block.rect[0], map_block.rect[1]))
                 self.markers[team][player].rect = (
                     x, y,
                     map_block.rect[2] / 2,
@@ -284,8 +299,6 @@ class OlinopolyModel:
                     logger.debug("found!")
                     break
             logger.debug("====================")
-        self.markers[team][player].block_pos = target_pos
-        self.markers[team][player].prev_block_pos = prev_pos
 
         logger.debug("prev: %s" % (str(prev_pos)))
 
@@ -293,7 +306,7 @@ class OlinopolyModel:
             for marker in self.map_blocks[prev_pos].markers_on_block:
                 t, p = marker
                 self.moveMarker(t, p, target_pos)
-            self.map_blocks.sort()
+            #self.map_blocks.sort()
 
         logger.debug("moveMarker() Leave")
         logger.debug("#########################")
