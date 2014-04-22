@@ -244,6 +244,32 @@ class OlinopolyModel:
         # add to current map block
         if target_pos != -1:
             self.map_blocks[target_pos].markers_on_block.append([team, player])
+            # change x, y position of marker based on target map block
+            map_block = self.map_blocks[target_pos]
+            markers = map_block.markers_on_block
+            for i in range(len(markers)):
+                marker = markers[i]
+                team, player = marker
+                if i == 0:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1]
+                elif i == 1:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1]
+                elif i == 2:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1] + g_map_block_height / 2
+                elif i == 3:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1] + g_map_block_height / 2
+                self.markers[team][player].rect = (
+                    x, y,
+                    map_block.rect[2] / 2,
+                    #map_block.rect[3] / 2
+                    map_block.rect[3]
+                )
+                if self.markers[team][player].prev_block_pos == None:
+                    self.markers[team][player].reloadImage()
 
         logger.debug("final target: %d" % (target_pos))
 
@@ -253,7 +279,7 @@ class OlinopolyModel:
             for marker in self.map_blocks[prev_pos].markers_on_block:
                 t, p = marker
                 logger.debug("t: %d, p: %d" % (t, p))
-                if t == team and p == player:
+                if (t == team) and (p == player):
                     self.map_blocks[prev_pos].markers_on_block.remove([t, p])
                     logger.debug("found!")
                     break
@@ -417,30 +443,6 @@ class OlinopolyView:
                     map_block.rect,
                     1
                 )
-            # Update position of marker based on position of map block
-            for i in range(len(map_block.markers_on_block)):
-                marker = map_block.markers_on_block[i]
-                team, player = marker
-                if i == 0:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1]
-                elif i == 1:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1]
-                elif i == 2:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1] + g_map_block_height / 2
-                elif i == 3:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1] + g_map_block_height / 2
-                self.model.markers[team][player].rect = (
-                    x, y,
-                    map_block.rect[2] / 2,
-                    #map_block.rect[3] / 2
-                    map_block.rect[3]
-                )
-                if self.model.markers[team][player].prev_block_pos == None:
-                    self.model.markers[team][player].reloadImage()
 
         # Marker
         for i in range(self.model.num_of_teams):
