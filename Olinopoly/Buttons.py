@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 import pygame
 from pygame.locals import *
+
 pygame.init()
+
+# [TODO] Improve button
+
 class Button:
     def create_button(self, surface, color, x, y, length, height, width, text, text_color):
         surface = self.draw_button(surface, color, length, height, x, y, width)
@@ -17,7 +21,7 @@ class Button:
         return surface
 
     def draw_button(self, surface, color, length, height, x, y, width):
-        for i in range(1,10):
+        for i in range(1,3):
             s = pygame.Surface((length+(i*2),height+(i*2)))
             s.fill(color)
             alpha = (255/(i+2))
