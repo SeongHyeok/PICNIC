@@ -228,31 +228,88 @@ class OlinopolyModel:
         self.current_state = target_state
 
     def moveMarker(self, team, player, target_pos, move_other_together=False):
+        logger.debug("#########################")
+        logger.debug("moveMarker() Enter")
+        logger.debug("=== Input values ===")
+        logger.debug("team    : %d" % (team))
+        logger.debug("player  : %d" % (player))
+        logger.debug("target  : %d" % (target_pos))
+        logger.debug("together: %d" % (move_other_together))
+        logger.debug("====================")
+
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         prev_pos = self.markers[team][player].block_pos
 
+        self.markers[team][player].block_pos = target_pos
+        self.markers[team][player].prev_block_pos = prev_pos
+
         # add to current map block
         if target_pos != -1:
             self.map_blocks[target_pos].markers_on_block.append([team, player])
+            # change x, y position of marker based on target map block
+            map_block = self.map_blocks[target_pos]
+            markers = map_block.markers_on_block
+            for i in range(len(markers)):
+                logger.debug("i: %d" % (i))
+                marker = markers[i]
+                team, player = marker
+
+                if 0 < target_pos < g_map_num_blocks - 1:
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos - 1, self.map_blocks[target_pos - 1].rect[0], self.map_blocks[target_pos - 1].rect[1]))
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos, self.map_blocks[target_pos].rect[0], self.map_blocks[target_pos].rect[1]))
+                    logger.debug("%d x, y = %d, %d" % (
+                        target_pos + 1, self.map_blocks[target_pos + 1].rect[0], self.map_blocks[target_pos + 1].rect[1]))
+
+                if i == 0:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1]
+                elif i == 1:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1]
+                elif i == 2:
+                    x = map_block.rect[0]
+                    y = map_block.rect[1] + g_map_block_height / 2
+                elif i == 3:
+                    x = map_block.rect[0] + g_map_block_width / 2
+                    y = map_block.rect[1] + g_map_block_height / 2
+                logger.debug("x, y = %d, %d" % (x, y))
+                logger.debug("x, y = %d, %d" % (map_block.rect[0], map_block.rect[1]))
+                self.markers[team][player].rect = (
+                    x, y,
+                    map_block.rect[2] / 2,
+                    #map_block.rect[3] / 2
+                    map_block.rect[3]
+                )
+                if self.markers[team][player].prev_block_pos == None:
+                    self.markers[team][player].reloadImage()
+
+        logger.debug("final target: %d" % (target_pos))
 
         # remove from previous map block
         if prev_pos != None:
+            logger.debug("=== Existing markers ===")
             for marker in self.map_blocks[prev_pos].markers_on_block:
                 t, p = marker
-                if t == team and p == player:
+                logger.debug("t: %d, p: %d" % (t, p))
+                if (t == team) and (p == player):
                     self.map_blocks[prev_pos].markers_on_block.remove([t, p])
+                    logger.debug("found!")
                     break
-        self.markers[team][player].block_pos = target_pos
-        self.markers[team][player].prev_block_pos= prev_pos
+            logger.debug("====================")
 
-        logger.debug("team: %d / player: %d / target: %d / prev: %s" % (team, player, target_pos, str(prev_pos)))
+        logger.debug("prev: %s" % (str(prev_pos)))
 
-        if move_other_together and prev_pos != None:
+        if (move_other_together) and (prev_pos != None):
             for marker in self.map_blocks[prev_pos].markers_on_block:
                 t, p = marker
                 self.moveMarker(t, p, target_pos)
-            self.map_blocks.sort()
+            #self.map_blocks.sort()
+
+        logger.debug("moveMarker() Leave")
+        logger.debug("#########################")
 
     def blinkSoftDsg(self):
         if g_map_enable_softdsg_blinking:
@@ -310,9 +367,11 @@ class Marker(Drawable):
         self.player = player
         self.block_pos = block_pos
 
+        self.prev_block_pos = None
+
         if self.c_or_i == "i":
             self.img = pygame.transform.scale(
-                pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (player))),
+                pygame.image.load(os.path.join(g_marker_image_dir_path, "%d%d.png" % (team, player))),
                 (int(self.rect[2]),int(self.rect[3]))
             )
         else:
@@ -320,7 +379,7 @@ class Marker(Drawable):
 
     def reloadImage(self):
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d.png" % (self.player))),
+            pygame.image.load(os.path.join(g_marker_image_dir_path, "%d%d.png" % (self.team, self.player))),
             (int(self.rect[2]),int(self.rect[3]))
         )
 
@@ -329,7 +388,7 @@ class Marker(Drawable):
             if y > self.rect[1]:
                 if x < self.rect[0] + self.rect[2]:
                     if y < self.rect[1] + self.rect[3]:
-                        print "%d Marker chosen for team %d " % (self.player, self.team)
+                        logger.debug("Pressed: Marker %d %d" % (self.team, self.player))
                         return True
                     else:
                         return False
@@ -397,29 +456,6 @@ class OlinopolyView:
                     map_block.rect,
                     1
                 )
-            # Update position of marker based on position of map block
-            for i in range(len(map_block.markers_on_block)):
-                marker = map_block.markers_on_block[i]
-                team, player = marker
-                if i == 0:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1]
-                elif i == 1:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1]
-                elif i == 2:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1] + g_map_block_height / 2
-                elif i == 3:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1] + g_map_block_height / 2
-                self.model.markers[team][player].rect = (
-                    x, y,
-                    map_block.rect[2] / 2,
-                    map_block.rect[3] / 2
-                )
-                if self.model.markers[team][player].prev_block_pos == None:
-                    self.model.markers[team][player].reloadImage()
 
         # Marker
         for i in range(self.model.num_of_teams):
