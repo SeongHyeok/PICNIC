@@ -1,1 +1,2 @@
-miss one turn go anywhere next turn
+miss one turn go anywhere
+next turn
