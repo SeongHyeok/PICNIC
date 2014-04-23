@@ -37,6 +37,7 @@ g_image_dir_path = os.path.join(os.curdir, "img")
 g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
 g_marker_image_dir_path = os.path.join(g_image_dir_path, "marker")
 g_olin_logo_dir_path = os.path.join(g_image_dir_path, "logo")
+g_txt_dir_path = os.path.join(os.curdir, "txt")
 
 # Screen
 g_screen_board_width = 850
@@ -68,7 +69,7 @@ g_map_enable_softdsg_blinking = True
 
 # Button
 g_button_roll_dice_rect = (
-    g_screen_board_width * 0.4,
+    g_screen_board_width * 0.6,
     g_screen_board_height * 0.2,
     g_screen_board_width * 0.2,
     g_screen_board_height * 0.2,
@@ -81,6 +82,14 @@ g_olin_logo_rect = (
     g_screen_board_width * 0.2,
     g_screen_board_height * 0.2,
 
+)
+
+# Place Description
+g_place_des_rect = (
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.2,
+    g_screen_board_width * 0.3,
+    g_screen_board_height * 0.2
 )
 
 # Chance Card
@@ -139,6 +148,7 @@ class OlinopolyModel:
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
         self.mouseover_map_block = -1  # -1 for indicating not-showing
+        self.map_block_info = PlaceDescrip(g_place_des_rect, "c", True)
 
         self.dice_number = None
 
@@ -408,6 +418,18 @@ class OlinLogo(Drawable):
             (int(self.rect[2]),int(self.rect[3]))
         )
 
+class PlaceDescrip(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(PlaceDescrip, self).__init__(rect, c_or_i, is_visible)
+        self.txt_list = []
+        self.txt_list.append("0 block")
+        for i in range(1,g_map_num_blocks):
+            path = os.path.join(g_txt_dir_path, "%d.txt" % (i))
+            text = open(path, 'r')
+            txt = text.readlines()
+            text.close()
+            self.txt_list.append(txt)
+
 ############################################################################
 # View Classes
 ############################################################################
@@ -500,18 +522,16 @@ class OlinopolyView:
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block >= 0:
-                msg = 'Map Block Number: %d' % (self.model.mouseover_map_block)
-                w, h = font_map_block_info.size(msg)
-                x, y = pygame.mouse.get_pos()
+                msg = self.model.map_block_info.txt_list[self.model.mouseover_map_block][0]
                 title = font_map_block_info.render(msg, True, (10, 10, 115))
 
                 pygame.draw.rect(
                     self.screen,
                     pygame.Color(0, 0, 0),
-                    (x - 5, y - 5, w + 10, h + 10),
+                    g_place_des_rect,
                     1
                 )
-                self.screen.blit(title, (x, y))
+                self.screen.blit(title, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
 
         pygame.display.flip()
 
