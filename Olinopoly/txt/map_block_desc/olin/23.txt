@@ -1,1 +1,1 @@
-Jounior Course
+Principles of Engineering class in Olin. In this course, students learn to integrate analysis, qualitative design, quantitative optimization, experiments, and simulations to improve their ability to engineer real systems through significant project experiences

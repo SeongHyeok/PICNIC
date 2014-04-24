@@ -1,2 +1,1 @@
-become ninja/ninjee
-earn money/miss one turn
+Period when ninjas(tutors) teach ninjees(tutee)
