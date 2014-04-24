@@ -48,7 +48,6 @@ g_txt_dir_path = os.path.join(os.curdir, "txt")
 g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/game")
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
-
 # Screen
 g_screen_board_width = 850
 g_screen_board_height = 850
@@ -61,6 +60,7 @@ g_line_width = 2
 
 # Map
 g_map_num_blocks_in_line = 10
+
 g_map_num_blocks_in_line_max = 10   # DO NOT CHANGE
 g_map_num_blocks_in_line_min = 5    # DO NOT CHANGE
 assert \
@@ -142,8 +142,8 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
 g_profile_main_rect = (
     g_screen_board_width,
     0,
-    g_screen_status_width*0.5,
-    g_screen_height*0.3
+    g_screen_status_width * 0.5,
+    g_screen_height * 0.3
 )
 
 g_profile_other_first_rect = (
@@ -153,7 +153,7 @@ g_profile_other_first_rect = (
     g_screen_board_height * 0.2
 )
 
-#Status Area
+# Status Area
 g_status_main_rect = (
     g_screen_board_width + g_screen_status_width * 0.5,
     g_screen_board_height * 0.2,
@@ -183,8 +183,8 @@ debug_dice = False
 
 class OlinopolyModel:
     def __init__(self):
-        #self.num_of_teams = g_max_team_num
-        self.num_of_teams = 1
+
+        self.num_of_teams = g_max_team_num
         assert self.num_of_teams <= g_max_team_num
 
         # Current state of game board
@@ -193,14 +193,14 @@ class OlinopolyModel:
         # 2: Wait for choosing marker
         # N: ...
         self.current_state = 1
-        self.current_team = 3
+
+        self.current_team = 0
 
         self.my_team_number = 0
 
         self.completed_markers = []
 
         self.enable_mouseover_map_block_info = True
-        self.prev_mouseover_map_block = 0
         self.mouseover_map_block = -1  # -1 for indicating not-showing
         self.map_block_info_game = GameDescrip(g_game_des_rect, "c", True)
         self.map_block_info_place = PlaceDescrip(g_place_des_rect, "c", True)
@@ -210,14 +210,14 @@ class OlinopolyModel:
         ##############################
         # Create map blocks
 
-        # Powerful feature of our code is that it is generic for number!
+        # Powerful feature of our code is that it is generic!
 
         self.map_blocks = []
         num = 0
         for i in range(4):    # 0 ~ 3 (bottom, left, top and right)
             init_x, init_y = g_map_block_initial_positions[i]
 
-            for j in range(g_map_num_blocks_in_line - 1):    # 0 ~ n-1
+            for j in range(g_map_num_blocks_in_line - 1):    # 0 ~ n-2
                 if j == 0:
                     x = init_x
                     y = init_y
@@ -254,20 +254,32 @@ class OlinopolyModel:
             self.markers.append([]) # for each team
 
         for i in range(self.num_of_teams):
+            visible = True if i == self.my_team_number else False
             for j in range(4):
                 init_x, init_y = g_marker_initial_positions[j]
                 marker = Marker(
                     (init_x, init_y, g_screen_status_width / 4, g_screen_board_height * 0.2 / 2),
-                    'i', True, i, j, None
+                    'i', visible, self.my_team_number, j, None
                 )
                 self.markers[i].append(marker)
-
 
         ##############################
         # Create complete area
 
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
+        )
+
+        ##############################
+        # Create roll dice button
+
+        self.button_roll_dice = Buttons.Button()
+
+        ##############################
+        # Create Olin Logo
+
+        self.olin_logo = OlinLogo(
+            g_olin_logo_rect, 'i', True
         )
 
         ##############################
@@ -285,44 +297,18 @@ class OlinopolyModel:
         )
 
         ##############################
-        # Create roll dice button
-
-        self.button_roll_dice = Buttons.Button()
-
-        ##############################
-        # Create Olin Logo
-
-        self.olin_logo = OlinLogo(
-            g_olin_logo_rect, 'i', True
-        )
-
-        ##############################
         # Create Profile and status
-        self.profiles = []
-        self.status = []
+
+        self.user_profiles = []
+        self.user_status = []
+
         for i in range(4):
-            if self.current_team == i:
-                profile_object = Profiles(
-                    g_profile_main_rect, 'i',True, i
-                )
-                self.profiles.append(profile_object)
+            profile = Profiles((0, 0, 0, 0), 'i', True, i)
+            status = Status((0, 0, 0, 0), 'c', True, i)
+            self.user_profiles.append(profile)
+            self.user_status.append(status)
 
-                status_object = Status(
-                    g_status_main_rect, 'c', True, i
-                )
-                self.status.append(status_object)
-
-            else:
-                profile_object = Profiles(
-                    g_profile_other_first_rect, 'i', True, i
-                )
-                self.profiles.append(profile_object)
-
-                status_object = Status(
-                    g_status_other_first_rect, 'c', True, i
-                )
-                self.status.append(status_object)
-
+        self.updateProfilePosition()
 
 
     def setState(self, target_state):
@@ -381,18 +367,9 @@ class OlinopolyModel:
                 marker = markers[i]
                 team, player = marker
 
-#                if 0 < target_pos < g_map_num_blocks - 1:
-#                    logger.debug("%d x, y = %d, %d" % (
-#                        target_pos - 1, self.map_blocks[target_pos - 1].rect[0], self.map_blocks[target_pos - 1].rect[1]))
-#                    logger.debug("%d x, y = %d, %d" % (
-#                        target_pos, self.map_blocks[target_pos].rect[0], self.map_blocks[target_pos].rect[1]))
-#                    logger.debug("%d x, y = %d, %d" % (
-#                        target_pos + 1, self.map_blocks[target_pos + 1].rect[0], self.map_blocks[target_pos + 1].rect[1]))
-
                 x = map_block.rect[0] + (g_map_block_width / current_len) * i
                 y = map_block.rect[1]
-#                logger.debug("x, y = %d, %d" % (x, y))
-#                logger.debug("x, y = %d, %d" % (map_block.rect[0], map_block.rect[1]))
+
                 self.markers[team][player].rect = (
                     x, y,
                     map_block.rect[2] / 2,
@@ -442,9 +419,36 @@ class OlinopolyModel:
                         (map_block.rect[2] - g_line_width * 2, map_block.rect[3] - g_line_width * 2)
                     )
 
+    def updateProfilePosition(self):
+        other_profile_x = g_profile_other_first_rect[0]
+        for i in range(self.num_of_teams):
+            if i == self.current_team:
+                self.user_profiles[i].rect = g_profile_main_rect
+                self.user_status[i].rect = g_status_main_rect
+            else:
+                x = other_profile_x
+                y = g_profile_other_first_rect[1]
+                w = g_profile_other_first_rect[2]
+                h = g_profile_other_first_rect[3]
+                self.user_profiles[i].rect = (x, y, w, h)
+
+                x = other_profile_x
+                y = g_status_other_first_rect[1]
+                w = g_status_other_first_rect[2]
+                h = g_status_other_first_rect[3]
+                self.user_status[i].rect = (x, y, w, h)
+
+                other_profile_x += g_screen_status_width / (self.num_of_teams - 1)
+
+            self.user_profiles[i].reloadImage()
+
+    def changeCurrentTeam(self, target_team):
+        self.current_team = target_team
+        self.updateProfilePosition()
+
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
-        self.rect = rect
+        self.rect = rect    # rect is (x, y, width, height)
         self.c_or_i = c_or_i
         self.is_visible = is_visible
 
@@ -553,18 +557,21 @@ class PlaceDescrip(Drawable):
             self.txt_list.append(txt)
 
 class Profiles(Drawable):
-    def __init__(self, rect, c_or_i, is_visible,team):
+    def __init__(self, rect, c_or_i, is_visible, team):
         super(Profiles, self).__init__(rect, c_or_i, is_visible)
         self.team = team
+        self.reloadImage()
+
+    def reloadImage(self):
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_profile_dir_path, "t%d.png" % (team))),
+            pygame.image.load(os.path.join(g_profile_dir_path, "t%d.png" % (self.team))),
             (int(self.rect[2]), int(self.rect[3]))
         )
 
-class Status(Profiles):
-    def __init__(self, rect, c_or_i, is_visible,team):
-        super(Status, self).__init__(rect, c_or_i, is_visible,team)
-
+class Status(Drawable):
+    def __init__(self, rect, c_or_i, is_visible, team):
+        super(Status, self).__init__(rect, c_or_i, is_visible)
+        self.team = team
 
 ############################################################################
 # View Classes
@@ -605,17 +612,17 @@ class OlinopolyView:
         # Marker
         for i in range(self.model.num_of_teams):
             for marker in self.model.markers[i]:
-                self.screen.blit(
-                    marker.img,
-                    (marker.rect[0], marker.rect[1])
-                )
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19, 110, 13),
-                    marker.rect,
-                    1
-                )
-
+                if marker.is_visible:
+                    self.screen.blit(
+                        marker.img,
+                        (marker.rect[0], marker.rect[1])
+                    )
+                    pygame.draw.rect(
+                        self.screen,
+                        pygame.Color(19, 110, 13),
+                        marker.rect,
+                        1
+                    )
 
         # Complete area
         pygame.draw.rect(
@@ -624,8 +631,6 @@ class OlinopolyView:
             self.model.complete_area.rect,
             1
         )
-
-
 
         # Button
         self.model.button_roll_dice.create_button(
@@ -673,52 +678,24 @@ class OlinopolyView:
                 self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5))
                 self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
 
-        #Profile
-        other_profile = list(g_profile_other_first_rect)
-        other_status = list(g_status_other_first_rect)
-        for i in range(4):
-            if self.model.current_team == i:
-                self.screen.blit(
-                    self.model.profiles[i].img,
-                    (self.model.profiles[i].rect[0],self.model.profiles[i].rect[1])
-                )
-
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19,110,13),
-                    self.model.profiles[i].rect,
-                    1
-                )
-
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19,110,13),
-                    self.model.status[i].rect,
-                    1
-                )
-
-            else:
-                self.screen.blit(
-                    self.model.profiles[i].img,
-                    (other_profile[0], other_profile[1])
-                )
-
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19,110,13),
-                    other_profile,
-                    1
-                )
-
-                pygame.draw.rect(
-                    self.screen,
-                    pygame.Color(19,110,13),
-                    other_status,
-                    1
-                )
-
-                other_profile[0] += g_screen_status_width/3
-                other_status[0] += g_screen_status_width/3
+        # Profile
+        for i in range(self.model.num_of_teams):
+            self.screen.blit(
+                self.model.user_profiles[i].img,
+                (self.model.user_profiles[i].rect[0], self.model.user_profiles[i].rect[1])
+            )
+            pygame.draw.rect(
+                self.screen,
+                pygame.Color(19, 110, 13),
+                self.model.user_profiles[i].rect,
+                1
+            )
+            pygame.draw.rect(
+                self.screen,
+                pygame.Color(19, 110, 13),
+                self.model.user_status[i].rect,
+                1
+            )
 
         pygame.display.flip()
 
@@ -741,8 +718,6 @@ class OlinopolyMouseOverController:
         self.model = model
 
     def onMapBlock(self, num):
-        #logger.debug("On map block %d" % num)
-        self.model.prev_mouseover_map_block = self.model.mouseover_map_block
         self.model.mouseover_map_block = num
 
     def check(self):
