@@ -87,32 +87,37 @@ g_olin_logo_rect = (
 
 )
 
+# Game Description
+g_game_des_rect = (
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.6,
+    g_screen_board_width * 0.3,
+    g_screen_board_height * 0.2
+)
+
 # Place Description
 g_place_des_rect = (
+    g_screen_board_width * 0.5,
+    g_screen_board_height * 0.6,
+    g_screen_board_width * 0.3,
+    g_screen_board_height * 0.2
+)
+
+# Chance Card
+g_chance_card_num = 30
+g_chance_card_position = [7, 13, 21, 29]
+
+g_softdsg_card_position = [35]
+
+# Complete area (for completed markers)
+g_complete_area_rect = (
     g_screen_board_width * 0.2,
     g_screen_board_height * 0.2,
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
 
-# Chance Card
-g_chance_card_rect = (  # DO NOT CHANGE
-    g_screen_board_width * 0.6,
-    g_screen_board_height * 0.6,
-    g_screen_board_width * 0.2,
-    g_screen_board_height * 0.2
-)
-g_chance_card_num = 30
-g_chance_card_position = [7, 13, 21, 29]
-g_softdsg_card_position = [35]
 
-# Complete area (for completed markers)
-g_complete_area_rect = (
-    g_screen_board_width * 0.2,
-    g_screen_board_height * 0.6,
-    g_screen_board_width * 0.3,
-    g_screen_board_height * 0.2
-)
 
 # Marker
 g_marker_start_x = g_screen_board_width - g_map_block_width
@@ -151,7 +156,8 @@ class OlinopolyModel:
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
         self.mouseover_map_block = -1  # -1 for indicating not-showing
-        self.map_block_info = PlaceDescrip(g_place_des_rect, "c", True)
+        self.map_block_info_game = GameDescrip(g_game_des_rect, "c", True)
+        self.map_block_info_place = PlaceDescrip(g_place_des_rect, "c", True)
 
         self.dice_number = None
 
@@ -211,18 +217,26 @@ class OlinopolyModel:
                 self.markers[i].append(marker)
             self.moveMarker(i, 0, 0)
 
-        ##############################
-        # Create chance card
-
-        self.chance_card = ChanceCard(
-            g_chance_card_rect, 'c', True
-        )
 
         ##############################
         # Create complete area
 
         self.complete_area = CompleteArea(
             g_complete_area_rect, 'c', True
+        )
+
+        ##############################
+        # Game Description
+
+        self.game_descrip = GameDescrip(
+            g_game_des_rect, 'c', True
+        )
+
+        ##############################
+        # Place Description
+
+        self.place_descrip = PlaceDescrip(
+            g_place_des_rect, 'c', True
         )
 
         ##############################
@@ -413,18 +427,13 @@ class Marker(Drawable):
             return False
 
 
-class ChanceCard(Drawable):
-    def __init__(self, rect, c_or_i, is_visible):
-        super(ChanceCard, self).__init__(rect, c_or_i, is_visible)
-        self.size = g_chance_card_num
-        self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_map_block_dir_path, "chance.png")),
-            (int(self.rect[2] - g_line_width * 2), int(self.rect[3] - g_line_width * 2))
-        )
 
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
+
+
+
 
 class OlinLogo(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -434,9 +443,9 @@ class OlinLogo(Drawable):
             (int(self.rect[2]),int(self.rect[3]))
         )
 
-class PlaceDescrip(Drawable):
+class GameDescrip(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
-        super(PlaceDescrip, self).__init__(rect, c_or_i, is_visible)
+        super(GameDescrip, self).__init__(rect, c_or_i, is_visible)
         self.txt_list = []
         self.txt_list.append("0 block")
         for i in range(1,g_map_num_blocks):
@@ -445,6 +454,19 @@ class PlaceDescrip(Drawable):
             txt = text.readlines()
             text.close()
             self.txt_list.append(txt)
+
+class PlaceDescrip(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(PlaceDescrip, self).__init__(rect, c_or_i, is_visible)
+        self.txt_list = []
+        self.txt_list.append("0 block")
+        for i in range(1,g_map_num_blocks):
+            path = os.path.join(g_map_block_olin_txt_dir_path, "%d.txt" % (i))
+            text = open(path, 'r')
+            txt = text.readlines()
+            text.close()
+            self.txt_list.append(txt)
+
 
 ############################################################################
 # View Classes
@@ -496,17 +518,6 @@ class OlinopolyView:
                     1
                 )
 
-        # Chance card
-        self.screen.blit(
-            self.model.chance_card.img,
-            (self.model.chance_card.rect[0] + g_line_width, self.model.chance_card.rect[1] + g_line_width)
-        )
-        pygame.draw.rect(
-            self.screen,
-            pygame.Color(19, 110, 13),
-            self.model.chance_card.rect,
-            1
-        )
 
         # Complete area
         pygame.draw.rect(
@@ -515,6 +526,8 @@ class OlinopolyView:
             self.model.complete_area.rect,
             1
         )
+
+
 
         # Button
         self.model.button_roll_dice.create_button(
@@ -538,17 +551,29 @@ class OlinopolyView:
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block >= 0:
-                msg = self.model.map_block_info.txt_list[self.model.mouseover_map_block][0]
-                title = font_map_block_info.render(msg, True, (10, 10, 115))
+                msg_game = self.model.map_block_info_game.txt_list[self.model.mouseover_map_block][0]
+                msg_place = self.model.map_block_info_place.txt_list[self.model.mouseover_map_block][0]
+                title_game = font_map_block_info.render(msg_game, True, (10, 10, 115))
+                title_place = font_map_block_info.render(msg_place, True, (10, 10, 115))
 
+                # Game Description
                 pygame.draw.rect(
                     self.screen,
-                    pygame.Color(0, 0, 0),
-                    g_place_des_rect,
+                    pygame.Color(19, 110, 13),
+                    self.model.game_descrip.rect,
                     1
                 )
-                self.screen.blit(title, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
 
+                # Place Description
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19, 110, 13),
+                    self.model.place_descrip.rect,
+                    1
+                )
+
+                self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5))
+                self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
         pygame.display.flip()
 
 ############################################################################
