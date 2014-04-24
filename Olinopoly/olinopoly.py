@@ -37,7 +37,10 @@ g_image_dir_path = os.path.join(os.curdir, "img")
 g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
 g_marker_image_dir_path = os.path.join(g_image_dir_path, "marker")
 g_olin_logo_dir_path = os.path.join(g_image_dir_path, "logo")
+
 g_txt_dir_path = os.path.join(os.curdir, "txt")
+g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/game")
+g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
 g_screen_board_width = 850
@@ -437,7 +440,7 @@ class PlaceDescrip(Drawable):
         self.txt_list = []
         self.txt_list.append("0 block")
         for i in range(1,g_map_num_blocks):
-            path = os.path.join(g_txt_dir_path, "%d.txt" % (i))
+            path = os.path.join(g_map_block_game_txt_dir_path, "%d.txt" % (i))
             text = open(path, 'r')
             txt = text.readlines()
             text.close()
