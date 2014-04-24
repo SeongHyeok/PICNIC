@@ -119,8 +119,6 @@ g_complete_area_rect = (
     g_screen_board_height * 0.2
 )
 
-
-
 # Marker
 g_marker_start_x = g_screen_board_width - g_map_block_width
 g_marker_start_y = g_screen_board_height - g_map_block_height
@@ -132,15 +130,6 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width + g_screen_status_width / 2, g_screen_board_height * 0.2 / 2),
     (g_screen_board_width + g_screen_status_width * 3 / 4, g_screen_board_height * 0.2 / 2)
 ]
-
-# Game data
-g_max_team_num = 4
-g_max_marker_on_map_block = 3
-
-assert 2 <= g_max_team_num <= 4
-assert 1 <= g_max_marker_on_map_block <= 4
-
-debug_dice = True
 
 #Profile Area
 g_profile_main_rect = (
@@ -156,6 +145,15 @@ g_profile_other_first_rect = (
     g_screen_status_width / 3.0,
     g_screen_board_height * 0.2
 )
+
+# Game data
+g_max_team_num = 4
+g_max_marker_on_map_block = 3
+
+assert 2 <= g_max_team_num <= 4
+assert 1 <= g_max_marker_on_map_block <= 4
+
+debug_dice = True
 
 ############################################################################
 # Model Classes
