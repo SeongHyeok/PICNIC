@@ -38,6 +38,7 @@ g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
 g_marker_image_dir_path = os.path.join(g_image_dir_path, "marker")
 g_olin_logo_dir_path = os.path.join(g_image_dir_path, "logo")
 g_txt_dir_path = os.path.join(os.curdir, "txt")
+g_profile_dir_path = os.path.join(g_image_dir_path, "profile")
 
 # Screen
 g_screen_board_width = 850
@@ -126,6 +127,21 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
 # Game data
 g_max_team_num = 4
 
+#Profile Area
+g_profile_main_rect = (
+    g_screen_board_width,
+    0,
+    g_screen_status_width*0.5,
+    g_screen_height*0.3
+)
+
+g_profile_other_first_rect = (
+    g_screen_board_width,
+    g_screen_board_height * 0.3,
+    g_screen_status_width / 3.0,
+    g_screen_board_height * 0.2
+)
+
 ############################################################################
 # Model Classes
 ############################################################################
@@ -141,9 +157,10 @@ class OlinopolyModel:
         # 2: Wait for choosing marker
         # N: ...
         self.current_state = 1
+        self.current_team = 3
 
         self.my_team_number = 0
-        self.current_marker = 0
+
 
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
@@ -233,6 +250,21 @@ class OlinopolyModel:
         self.olin_logo = OlinLogo(
             g_olin_logo_rect, 'i', True
         )
+
+        ##############################
+        # Create Profile
+        self.profiles = []
+        for i in range(4):
+            if self.current_team == i:
+                profile_object = Profiles(
+                    g_profile_main_rect, 'i',True, i
+                )
+                self.profiles.append(profile_object)
+            else:
+                profile_object = Profiles(
+                    g_profile_other_first_rect, 'i', True, i
+                )
+                self.profiles.append(profile_object)
 
     def setState(self, target_state):
         self.current_state = target_state
@@ -443,6 +475,19 @@ class PlaceDescrip(Drawable):
             text.close()
             self.txt_list.append(txt)
 
+class Profiles(Drawable):
+    def __init__(self, rect, c_or_i, is_visible,team):
+        super(Profiles, self).__init__(rect, c_or_i, is_visible)
+        self.team = team
+        self.img = pygame.transform.scale(
+            pygame.image.load(os.path.join(g_profile_dir_path, "t%d.png" % (team))),
+            (int(self.rect[2]), int(self.rect[3]))
+        )
+
+class Status(Profiles):
+    def __init__(self, rect, c_or_i, is_visible,team):
+        super(Status, self).__init__(rect, c_or_i, is_visible,team)
+
 ############################################################################
 # View Classes
 ############################################################################
@@ -546,6 +591,34 @@ class OlinopolyView:
                 )
                 self.screen.blit(title, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
 
+        #Profile
+        other_profile = list(g_profile_other_first_rect)
+        for i in range(4):
+            if self.model.current_team == i:
+                self.screen.blit(
+                    self.model.profiles[i].img,
+                    (self.model.profiles[i].rect[0],self.model.profiles[i].rect[1])
+                )
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19,110,13),
+                    self.model.profiles[i].rect,
+                    1
+                )
+            else:
+                self.screen.blit(
+                    self.model.profiles[i].img,
+                    (other_profile[0], other_profile[1])
+                )
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19,110,13),
+                    other_profile,
+                    1
+                )
+                other_profile[0] += g_screen_status_width/3
         pygame.display.flip()
 
 ############################################################################
