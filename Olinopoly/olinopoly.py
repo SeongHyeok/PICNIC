@@ -128,6 +128,12 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
 
 # Game data
 g_max_team_num = 4
+g_max_marker_on_map_block = 3
+
+assert 2 <= g_max_team_num <= 4
+assert 1 <= g_max_marker_on_map_block <= 4
+
+debug_dice = True
 
 ############################################################################
 # Model Classes
@@ -137,6 +143,7 @@ class OlinopolyModel:
     def __init__(self):
         #self.num_of_teams = g_max_team_num
         self.num_of_teams = 1
+        assert self.num_of_teams <= g_max_team_num
 
         # Current state of game board
         # 0: Wait for other player
@@ -209,7 +216,6 @@ class OlinopolyModel:
                     'i', True, i, j, None
                 )
                 self.markers[i].append(marker)
-            self.moveMarker(i, 0, 0)
 
         ##############################
         # Create chance card
@@ -250,9 +256,17 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
+        # Check availabiltiy
+        if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_map_block:
+            logger.debug("Failed to move marker: max reached")
+            logger.debug("moveMarker() Leave")
+            logger.debug("#########################")
+            return False
+
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         prev_pos = self.markers[team][player].block_pos
+        logger.debug("prev: %s" % (str(prev_pos)))
 
         self.markers[team][player].block_pos = target_pos
         self.markers[team][player].prev_block_pos = prev_pos
@@ -263,37 +277,27 @@ class OlinopolyModel:
             # change x, y position of marker based on target map block
             map_block = self.map_blocks[target_pos]
             markers = map_block.markers_on_block
-            for i in range(len(markers)):
+            current_len = len(markers)
+            for i in range(current_len):
                 logger.debug("i: %d" % (i))
                 marker = markers[i]
                 team, player = marker
 
-                if 0 < target_pos < g_map_num_blocks - 1:
-                    logger.debug("%d x, y = %d, %d" % (
-                        target_pos - 1, self.map_blocks[target_pos - 1].rect[0], self.map_blocks[target_pos - 1].rect[1]))
-                    logger.debug("%d x, y = %d, %d" % (
-                        target_pos, self.map_blocks[target_pos].rect[0], self.map_blocks[target_pos].rect[1]))
-                    logger.debug("%d x, y = %d, %d" % (
-                        target_pos + 1, self.map_blocks[target_pos + 1].rect[0], self.map_blocks[target_pos + 1].rect[1]))
+#                if 0 < target_pos < g_map_num_blocks - 1:
+#                    logger.debug("%d x, y = %d, %d" % (
+#                        target_pos - 1, self.map_blocks[target_pos - 1].rect[0], self.map_blocks[target_pos - 1].rect[1]))
+#                    logger.debug("%d x, y = %d, %d" % (
+#                        target_pos, self.map_blocks[target_pos].rect[0], self.map_blocks[target_pos].rect[1]))
+#                    logger.debug("%d x, y = %d, %d" % (
+#                        target_pos + 1, self.map_blocks[target_pos + 1].rect[0], self.map_blocks[target_pos + 1].rect[1]))
 
-                if i == 0:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1]
-                elif i == 1:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1]
-                elif i == 2:
-                    x = map_block.rect[0]
-                    y = map_block.rect[1] + g_map_block_height / 2
-                elif i == 3:
-                    x = map_block.rect[0] + g_map_block_width / 2
-                    y = map_block.rect[1] + g_map_block_height / 2
-                logger.debug("x, y = %d, %d" % (x, y))
-                logger.debug("x, y = %d, %d" % (map_block.rect[0], map_block.rect[1]))
+                x = map_block.rect[0] + (g_map_block_width / current_len) * i
+                y = map_block.rect[1]
+#                logger.debug("x, y = %d, %d" % (x, y))
+#                logger.debug("x, y = %d, %d" % (map_block.rect[0], map_block.rect[1]))
                 self.markers[team][player].rect = (
                     x, y,
                     map_block.rect[2] / 2,
-                    #map_block.rect[3] / 2
                     map_block.rect[3]
                 )
                 if self.markers[team][player].prev_block_pos == None:
@@ -303,26 +307,24 @@ class OlinopolyModel:
 
         # remove from previous map block
         if prev_pos != None:
-            logger.debug("=== Existing markers ===")
-            for marker in self.map_blocks[prev_pos].markers_on_block:
-                t, p = marker
-                logger.debug("t: %d, p: %d" % (t, p))
-                if (t == team) and (p == player):
-                    self.map_blocks[prev_pos].markers_on_block.remove([t, p])
-                    logger.debug("found!")
-                    break
-            logger.debug("====================")
+            self.map_blocks[prev_pos].markers_on_block.remove([team, player])
 
-        logger.debug("prev: %s" % (str(prev_pos)))
-
-        if (move_other_together) and (prev_pos != None):
-            for marker in self.map_blocks[prev_pos].markers_on_block:
-                t, p = marker
-                self.moveMarker(t, p, target_pos)
-            #self.map_blocks.sort()
+            # move others in the same map block
+            if (move_other_together):
+                logger.debug("other markers / len: %d" % (len(self.map_blocks[prev_pos].markers_on_block)))
+                markers = []
+                for marker in self.map_blocks[prev_pos].markers_on_block:
+                    markers.append(marker)
+                for marker in markers:
+                    t, p = marker
+                    logger.debug("t: %d / p: %d" % (t, p))
+                    self.moveMarker(t, p, target_pos)
+                #self.map_blocks.sort()
 
         logger.debug("moveMarker() Leave")
         logger.debug("#########################")
+
+        return True
 
     def blinkSoftDsg(self):
         if g_map_enable_softdsg_blinking:
@@ -605,7 +607,11 @@ class OlinopolyDiceController:
         self.model = model
 
     def rollDice(self):
-        self.model.dice_number = random.randint(1, 6)
+        if debug_dice:
+            n = int(raw_input("[DEBUG MODE] input dice num: "))
+            self.model.dice_number = n
+        else:
+            self.model.dice_number = random.randint(1, 6)
         logger.debug("set dice num: %d" % (self.model.dice_number))
 
 ############################################################################
@@ -653,26 +659,28 @@ if __name__ == "__main__":
             if event.type == MOUSEMOTION:
                 controller_mouse.handleMouseEvent(event)
 
-            if event.type == MOUSEBUTTONDOWN:
+            if event.type == MOUSEBUTTONUP:
                 x, y = pygame.mouse.get_pos()
                 if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
                     controller_dice.rollDice()
                     model.setState(2)
                 elif model.current_state == 2:
+                    result = False
                     for player in model.markers[model.my_team_number]:
                         if player.pressed(x, y):
                             team = player.team
                             player = player.player
-                            logger.debug("dice num: %d" % (model.dice_number))
+                            logger.debug("Dice Num: %d" % (model.dice_number))
                             if model.markers[team][player].block_pos == None:
                                 target_pos = model.dice_number
                             else:
                                 target_pos = model.markers[team][player].block_pos + model.dice_number
-                            model.moveMarker(
+                            result = model.moveMarker(
                                 team, player, target_pos, True
                             )
-                            model.setState(1)
                             break
+                    if result:
+                        model.setState(1)
 
         view.draw()
         time.sleep(.001)
