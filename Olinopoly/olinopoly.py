@@ -619,7 +619,9 @@ class OlinopolyView:
                     1
                 )
 
-<<<<<<< HEAD
+                self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5))
+                self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
+
         #Profile
         other_profile = list(g_profile_other_first_rect)
         for i in range(4):
@@ -648,10 +650,7 @@ class OlinopolyView:
                     1
                 )
                 other_profile[0] += g_screen_status_width/3
-=======
-                self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5))
-                self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
->>>>>>> 306204d74c570d8a41f7928ef3e3f5ead9880820
+
         pygame.display.flip()
 
 ############################################################################
