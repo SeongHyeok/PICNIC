@@ -146,6 +146,21 @@ g_profile_other_first_rect = (
     g_screen_board_height * 0.2
 )
 
+#Status Area
+g_status_main_rect = (
+    g_screen_board_width + g_screen_status_width * 0.5,
+    g_screen_board_height * 0.2,
+    g_screen_status_width * 0.5,
+    g_screen_height * 0.1
+)
+
+g_status_other_first_rect = (
+    g_screen_board_width,
+    g_screen_board_height * 0.5,
+    g_screen_status_width / 3.0,
+    g_screen_board_height * 0.1
+)
+
 # Game data
 g_max_team_num = 4
 g_max_marker_on_map_block = 3
@@ -153,7 +168,7 @@ g_max_marker_on_map_block = 3
 assert 2 <= g_max_team_num <= 4
 assert 1 <= g_max_marker_on_map_block <= 4
 
-debug_dice = True
+debug_dice = False
 
 ############################################################################
 # Model Classes
@@ -274,19 +289,33 @@ class OlinopolyModel:
         )
 
         ##############################
-        # Create Profile
+        # Create Profile and status
         self.profiles = []
+        self.status = []
         for i in range(4):
             if self.current_team == i:
                 profile_object = Profiles(
                     g_profile_main_rect, 'i',True, i
                 )
                 self.profiles.append(profile_object)
+
+                status_object = Status(
+                    g_status_main_rect, 'c', True, i
+                )
+                self.status.append(status_object)
+
             else:
                 profile_object = Profiles(
                     g_profile_other_first_rect, 'i', True, i
                 )
                 self.profiles.append(profile_object)
+
+                status_object = Status(
+                    g_status_other_first_rect, 'c', True, i
+                )
+                self.status.append(status_object)
+
+
 
     def setState(self, target_state):
         self.current_state = target_state
@@ -622,6 +651,7 @@ class OlinopolyView:
 
         #Profile
         other_profile = list(g_profile_other_first_rect)
+        other_status = list(g_status_other_first_rect)
         for i in range(4):
             if self.model.current_team == i:
                 self.screen.blit(
@@ -635,6 +665,14 @@ class OlinopolyView:
                     self.model.profiles[i].rect,
                     1
                 )
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19,110,13),
+                    self.model.status[i].rect,
+                    1
+                )
+
             else:
                 self.screen.blit(
                     self.model.profiles[i].img,
@@ -647,7 +685,16 @@ class OlinopolyView:
                     other_profile,
                     1
                 )
+
+                pygame.draw.rect(
+                    self.screen,
+                    pygame.Color(19,110,13),
+                    other_status,
+                    1
+                )
+
                 other_profile[0] += g_screen_status_width/3
+                other_status[0] += g_screen_status_width/3
 
         pygame.display.flip()
 
