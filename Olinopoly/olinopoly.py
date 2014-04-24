@@ -459,14 +459,9 @@ class Marker(Drawable):
         else:
             return False
 
-
-
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
-
-
-
 
 class OlinLogo(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -480,11 +475,13 @@ class GameDescrip(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(GameDescrip, self).__init__(rect, c_or_i, is_visible)
         self.txt_list = []
-        self.txt_list.append("0 block")
-        for i in range(1,g_map_num_blocks):
-            path = os.path.join(g_map_block_game_txt_dir_path, "%d.txt" % (i))
+        for i in range(g_map_num_blocks):
+            if i in g_chance_card_position:
+                path = os.path.join(g_map_block_game_txt_dir_path, "%d.txt" % (i))
+            else:
+                path = os.path.join(g_map_block_game_txt_dir_path, "%d.txt" % (i))
             text = open(path, 'r')
-            txt = text.readlines()
+            txt = [str(txt).strip() for txt in text.readlines()]
             text.close()
             self.txt_list.append(txt)
 
@@ -492,14 +489,15 @@ class PlaceDescrip(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(PlaceDescrip, self).__init__(rect, c_or_i, is_visible)
         self.txt_list = []
-        self.txt_list.append("0 block")
-        for i in range(1,g_map_num_blocks):
-            path = os.path.join(g_map_block_olin_txt_dir_path, "%d.txt" % (i))
+        for i in range(g_map_num_blocks):
+            if i in g_chance_card_position:
+                path = os.path.join(g_map_block_olin_txt_dir_path, "%d.txt" % (i))
+            else:
+                path = os.path.join(g_map_block_olin_txt_dir_path, "%d.txt" % (i))
             text = open(path, 'r')
-            txt = text.readlines()
+            txt = [str(txt).strip() for txt in text.readlines()]
             text.close()
             self.txt_list.append(txt)
-
 
 class Profiles(Drawable):
     def __init__(self, rect, c_or_i, is_visible,team):
