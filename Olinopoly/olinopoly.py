@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Debug options
 ############################################################################
 
-g_debug_dice = True
+g_debug_dice = False
 
 ############################################################################
 # Global variabless
@@ -153,7 +153,7 @@ g_profile_other_first_rect = (
     g_screen_board_height * 0.2
 )
 
-# Status Area
+# StatusArea Area
 g_status_main_rect = (
     g_screen_board_width + g_screen_status_width * 0.5,
     g_screen_board_height * 0.2,
@@ -174,6 +174,9 @@ g_max_marker_on_map_block = 3
 
 assert 2 <= g_max_team_num <= 4
 assert 1 <= g_max_marker_on_map_block <= 4
+
+g_default_name = ["Steven", "Inseong", "Danny", "Paul"]
+g_default_money = 500
 
 debug_dice = False
 
@@ -206,6 +209,13 @@ class OlinopolyModel:
         self.map_block_info_place = PlaceDescrip(g_place_des_rect, "c", True)
 
         self.dice_number = None
+
+        # Set initial player data
+        self.playerdata = []
+        for i in range(self.num_of_teams):
+            playerdata = PlayerData(g_default_name[i], g_default_money, i)
+            self.playerdata.append(playerdata)
+
 
         ##############################
         # Create map blocks
@@ -303,8 +313,8 @@ class OlinopolyModel:
         self.user_status = []
 
         for i in range(4):
-            profile = Profiles((0, 0, 0, 0), 'i', True, i)
-            status = Status((0, 0, 0, 0), 'c', True, i)
+            profile = ProfileArea((0, 0, 0, 0), 'i', True, i)
+            status = StatusArea((0, 0, 0, 0), 'c', True, i)
             self.user_profiles.append(profile)
             self.user_status.append(status)
 
@@ -421,10 +431,19 @@ class OlinopolyModel:
 
     def updateProfilePosition(self):
         other_profile_x = g_profile_other_first_rect[0]
+        other_name_x = g_status_other_first_rect[0] + g_status_other_first_rect[2] * 0.1
         for i in range(self.num_of_teams):
             if i == self.current_team:
                 self.user_profiles[i].rect = g_profile_main_rect
                 self.user_status[i].rect = g_status_main_rect
+                self.user_status[i].name_pos = (
+                    g_status_main_rect[0] + g_status_main_rect[2] * 0.1,
+                    g_status_main_rect[1] + g_status_main_rect[3] * 0.05
+                )
+                self.user_status[i].money_pos = (
+                    g_status_main_rect[0] + g_status_main_rect[2] * 0.1,
+                    g_status_main_rect[1] + g_status_main_rect[3]/2 + g_status_main_rect[3] * 0.05
+                )
             else:
                 x = other_profile_x
                 y = g_profile_other_first_rect[1]
@@ -438,7 +457,18 @@ class OlinopolyModel:
                 h = g_status_other_first_rect[3]
                 self.user_status[i].rect = (x, y, w, h)
 
+                y = y + g_status_other_first_rect[3] * 0.05
+                self.user_status[i].name_pos = (
+                    other_name_x,
+                    y
+                )
+                self.user_status[i].money_pos = (
+                    other_name_x,
+                    y + g_status_other_first_rect[3] * 0.5
+                )
+
                 other_profile_x += g_screen_status_width / (self.num_of_teams - 1)
+                other_name_x += g_screen_status_width / (self.num_of_teams - 1)
 
             self.user_profiles[i].reloadImage()
 
@@ -556,9 +586,9 @@ class PlaceDescrip(Drawable):
             text.close()
             self.txt_list.append(txt)
 
-class Profiles(Drawable):
+class ProfileArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible, team):
-        super(Profiles, self).__init__(rect, c_or_i, is_visible)
+        super(ProfileArea, self).__init__(rect, c_or_i, is_visible)
         self.team = team
         self.reloadImage()
 
@@ -568,9 +598,19 @@ class Profiles(Drawable):
             (int(self.rect[2]), int(self.rect[3]))
         )
 
-class Status(Drawable):
+class StatusArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible, team):
-        super(Status, self).__init__(rect, c_or_i, is_visible)
+        super(StatusArea, self).__init__(rect, c_or_i, is_visible)
+        self.team = team
+        self.font_name = pygame.font.SysFont('Verdana', 16, False)
+        self.font_money = pygame.font.SysFont('Verdana', 16, False)
+        self.name_pos = (0, 0)
+        self.money_pos = (0, 0)
+
+class PlayerData:
+    def __init__(self, name, money, team):
+        self.name = name
+        self.money = money
         self.team = team
 
 ############################################################################
@@ -696,7 +736,25 @@ class OlinopolyView:
                 self.model.user_status[i].rect,
                 1
             )
+            name = self.model.user_status[i].font_name.render(
+                str(self.model.playerdata[i].name),
+                True,
+                (10, 10, 115)
+            )
+            money = self.model.user_status[i].font_money.render(
+                str(self.model.playerdata[i].money),
+                True,
+                (10, 10, 115)
+            )
 
+            self.screen.blit(
+                name,
+                self.model.user_status[i].name_pos
+            )
+            self.screen.blit(
+                money,
+                self.model.user_status[i].money_pos
+            )
         pygame.display.flip()
 
 ############################################################################
