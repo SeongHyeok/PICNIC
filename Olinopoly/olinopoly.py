@@ -21,13 +21,18 @@ Created on Sun Apr  6 21:34:32 2014
 import pygame, Buttons
 from pygame.locals import *
 import random
-import math
 import time
-import os, sys, traceback
+import os
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+############################################################################
+# Debug options
+############################################################################
+
+g_debug_dice = True
 
 ############################################################################
 # Global variabless
@@ -118,6 +123,8 @@ g_complete_area_rect = (
     g_screen_board_width * 0.3,
     g_screen_board_height * 0.2
 )
+g_complete_area_marker_width = g_map_block_width / 2
+g_complete_area_max_in_row = g_complete_area_rect[2] / g_complete_area_marker_width
 
 # Marker
 g_marker_start_x = g_screen_board_width - g_map_block_width
@@ -153,8 +160,6 @@ g_max_marker_on_map_block = 3
 assert 2 <= g_max_team_num <= 4
 assert 1 <= g_max_marker_on_map_block <= 4
 
-debug_dice = True
-
 ############################################################################
 # Model Classes
 ############################################################################
@@ -175,6 +180,7 @@ class OlinopolyModel:
 
         self.my_team_number = 0
 
+        self.completed_markers = []
 
         self.enable_mouseover_map_block_info = True
         self.prev_mouseover_map_block = 0
@@ -301,23 +307,39 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
-        # Check availabiltiy
-        if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_map_block:
-            logger.debug("Failed to move marker: max reached")
-            logger.debug("moveMarker() Leave")
-            logger.debug("#########################")
-            return False
-
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
+        else:
+            # Check availabiltiy
+            if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_map_block:
+                logger.debug("Failed to move marker: max reached")
+                logger.debug("moveMarker() Leave")
+                logger.debug("#########################")
+                return False
+
         prev_pos = self.markers[team][player].block_pos
         logger.debug("prev: %s" % (str(prev_pos)))
 
         self.markers[team][player].block_pos = target_pos
         self.markers[team][player].prev_block_pos = prev_pos
 
-        # add to current map block
-        if target_pos != -1:
+        if target_pos == -1:    # add to completed area
+            current_len = len(self.completed_markers)
+            if current_len < g_complete_area_max_in_row:
+                x = g_complete_area_rect[0] + g_map_block_width / 2 * current_len
+                y = g_complete_area_rect[1]
+                w = g_complete_area_marker_width
+                h = g_map_block_height
+            else:
+                x = g_complete_area_rect[0] + g_map_block_width * current_len
+                y = g_complete_area_rect[1] + g_complete_area_rect[4] / 2
+                w = g_complete_area_marker_width
+                h = g_map_block_height
+            self.markers[team][player].rect = (x, y, w, h)
+            self.markers[team][player].reloadImage()
+            self.completed_markers.append((team, player))
+
+        else:   # add to current map block
             self.map_blocks[target_pos].markers_on_block.append([team, player])
             # change x, y position of marker based on target map block
             map_block = self.map_blocks[target_pos]
@@ -705,7 +727,7 @@ class OlinopolyDiceController:
         self.model = model
 
     def rollDice(self):
-        if debug_dice:
+        if g_debug_dice:
             n = int(raw_input("[DEBUG MODE] input dice num: "))
             self.model.dice_number = n
         else:
@@ -765,7 +787,7 @@ if __name__ == "__main__":
                 elif model.current_state == 2:
                     result = False
                     for player in model.markers[model.my_team_number]:
-                        if player.pressed(x, y):
+                        if player.pressed(x, y) and player.block_pos != -1:
                             team = player.team
                             player = player.player
                             logger.debug("Dice Num: %d" % (model.dice_number))
