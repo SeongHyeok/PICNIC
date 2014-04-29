@@ -49,8 +49,8 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 850
-g_screen_board_height = 850
+g_screen_board_width = 600
+g_screen_board_height = 600
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
@@ -116,11 +116,20 @@ g_chance_card_position = [7, 13, 21, 29]
 
 g_softdsg_card_position = [35]
 
+# Current turn information area
+g_current_turn_area_rect = (
+    g_screen_board_width * 0.15,
+    g_screen_board_height * 0.12,
+    g_screen_board_width * 0.35,
+    g_screen_board_height * 0.06
+)
+g_current_turn_str = "Current Turn - %s"
+
 # Complete area (for completed markers)
 g_complete_area_rect = (
-    g_screen_board_width * 0.2,
+    g_screen_board_width * 0.15,
     g_screen_board_height * 0.2,
-    g_screen_board_width * 0.3,
+    g_screen_board_width * 0.35,
     g_screen_board_height * 0.2
 )
 g_complete_area_marker_width = g_map_block_width / 2
@@ -138,7 +147,7 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width + g_screen_status_width * 3 / 4, g_screen_board_height * 0.2 / 2)
 ]
 
-#Profile Area
+# Profile Area
 g_profile_main_rect = (
     g_screen_board_width,
     0,
@@ -273,6 +282,16 @@ class OlinopolyModel:
                     'i', visible, i, j, None
                 )
                 self.markers[i].append(marker)
+
+        ##############################
+        # Current turn information area
+        self.current_turn_area = CurrentTurnArea(
+            g_current_turn_area_rect, 'c', True
+        )
+        self.current_turn_area.font_pos = (
+            g_current_turn_area_rect[0] + 10,
+            g_current_turn_area_rect[1] + 10
+        )
 
         ##############################
         # Create complete area
@@ -607,6 +626,12 @@ class Marker(Drawable):
         else:
             return False
 
+class CurrentTurnArea(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(CurrentTurnArea, self).__init__(rect, c_or_i, is_visible)
+        self.font = pygame.font.SysFont('Verdana', 16, False)
+        self.font_pos = (0, 0)
+
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(CompleteArea, self).__init__(rect, c_or_i, is_visible)
@@ -684,6 +709,7 @@ class OlinopolyView:
         self.screen = screen
 
     def draw(self):
+
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
 
@@ -724,6 +750,26 @@ class OlinopolyView:
                         marker.rect,
                         1
                     )
+
+        # Current turn informatoin area
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.current_turn_area,
+            1
+        )
+        msg = g_current_turn_str % (
+            self.model.playerdata[self.model.current_team_number].name
+        )
+        current_turn = self.model.current_turn_area.font.render(
+            msg,
+            True,
+            (10, 10, 115)
+        )
+        self.screen.blit(
+            current_turn,
+            self.model.current_turn_area.font_pos
+        )
 
         # Complete area
         pygame.draw.rect(
