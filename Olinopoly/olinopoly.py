@@ -342,7 +342,7 @@ class OlinopolyModel:
 
         if g_is_local_version:
             self.updateProfilePosition()
-            self.updateMarkerVisibility()
+        self.updateMarkerVisibility()
 
     def updateMarkerVisibility(self):
         for i in range(self.num_of_teams):
@@ -399,15 +399,46 @@ class OlinopolyModel:
             self.completed_markers.append((team, player))
 
         else:   # add to current map block
-            self.map_blocks[target_pos].markers_on_block.append([team, player])
-            # change x, y position of marker based on target map block
             map_block = self.map_blocks[target_pos]
             markers = map_block.markers_on_block
             current_len = len(markers)
+
+            # if there is another player's markers, they are caught by current marker
+            if current_len > 0:
+                if markers[0][0] != team:
+                    markers = []
+                    for marker in map_block.markers_on_block:
+                        markers.append(marker)
+                    for marker in markers:
+                        t, p = marker
+                        logger.debug("marker %d,%d is moved to the beginning" % (t, p))
+                        prev = self.markers[t][p].block_pos
+                        self.markers[t][p].block_pos = None
+
+                        x, y = g_marker_initial_positions[p]
+                        w = g_screen_status_width / 4
+                        h = g_screen_board_height * 0.2 / 2
+                        self.markers[t][p].rect = (
+                            x, y, w, h
+                        )
+                        self.markers[t][p].reloadImage()
+
+                        # remove other markers from the map block
+                        self.map_blocks[prev].markers_on_block.remove([t, p])
+                    self.updateMarkerVisibility()
+
+            self.map_blocks[target_pos].markers_on_block.append([team, player])
+
+            map_block = self.map_blocks[target_pos]
+            markers = map_block.markers_on_block
+            current_len = len(markers)
+
+            # change x, y position of marker based on target map block
+            logger.debug("current length of markers in the target map block: [%d]" % (current_len))
             for i in range(current_len):
-                logger.debug("i: %d" % (i))
                 marker = markers[i]
                 team, player = marker
+                logger.debug("i: %d / t:%d, p:%d" % (i, team, player))
 
                 x = map_block.rect[0] + (g_map_block_width / current_len) * i
                 y = map_block.rect[1]
