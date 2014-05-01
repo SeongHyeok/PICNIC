@@ -49,8 +49,8 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 600
-g_screen_board_height = 600
+g_screen_board_width = 800
+g_screen_board_height = 800
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
@@ -658,24 +658,24 @@ class GameDescrip(Drawable):
             text.close()
             self.txt_list.append(txt)
 
-    def render_text_rect(self, msg, txt_font, txt_color, background_color):
-        for info_list in self.txt_list:
-            for lines in info_list:
-                if txt_font.size(lines)[0] > self.rect[2]:
-                    split_words = lines.split(' ')
-                    accum_line = " "
-                    for word in split_words:
-                        if txt_font.size(word)[0] < self.rect[2]:
-                            new_line = accum_line + word + " "
-                            if txt_font.size(new_line)[0] < self.rect[2]:
-                                accum_line = new_line
-                            else:
-                                self.txt_list.append(accum_line)
-                                accum_line = word + " "
-                            self.txt_list.append(accum_line)
-                        self.txt_list.append(accum_line)
-                    else:
-                        self.txt_list.append(accum_line)
+#    def render_text_rect(self, msg, txt_font, txt_color, background_color):
+#        for info_list in self.txt_list:
+#            for lines in info_list:
+#                if txt_font.size(lines)[0] > self.rect[2]:
+#                    split_words = lines.split(' ')
+#                    accum_line = " "
+#                    for word in split_words:
+#                        if txt_font.size(word)[0] < self.rect[2]:
+#                            new_line = accum_line + word + " "
+#                            if txt_font.size(new_line)[0] < self.rect[2]:
+#                                accum_line = new_line
+#                            else:
+#                                self.txt_list.append(accum_line)
+#                                accum_line = word + " "
+#                            self.txt_list.append(accum_line)
+#                        self.txt_list.append(accum_line)
+#                    else:
+#                        self.txt_list.append(accum_line)
 
 class PlaceDescrip(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -820,17 +820,17 @@ class OlinopolyView:
         # Mouseover Map Block Information
         if self.model.enable_mouseover_map_block_info:
             if self.model.mouseover_map_block >= 0:
-                msg_game = self.model.map_block_info_game.txt_list[self.model.mouseover_map_block][0]
-                #msg_game = self.model.map_block_info_game.txt_list[self.model.mouseover_map_block]
-                msg_place = self.model.map_block_info_place.txt_list[self.model.mouseover_map_block][0]
-                #title_game = self.model.game_descrip.render_text_rect(
-                 #   msg_game,
-                  #  font_map_block_info,
-                   # pygame.Color(0, 0, 0),
-                    #pygame.Color(19, 110,13)
-                #)
-                title_game = font_map_block_info.render(msg_game, True, (10, 10, 115))
-                title_place = font_map_block_info.render(msg_place, True, (10, 10, 115))
+                l = len(self.model.map_block_info_game.txt_list[self.model.mouseover_map_block])
+                for i in range(l):
+                    msg_game = self.model.map_block_info_game.txt_list[self.model.mouseover_map_block][i]
+                    title_game = font_map_block_info.render(msg_game, True, (10, 10, 115))
+                    self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5 + i*15))
+
+                l = len(self.model.map_block_info_place.txt_list[self.model.mouseover_map_block])
+                for i in range(l):
+                    msg_place = self.model.map_block_info_place.txt_list[self.model.mouseover_map_block][i]
+                    title_place = font_map_block_info.render(msg_place, True, (10, 10, 115))
+                    self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5 + i*15))
 
                 # Game Description
                 pygame.draw.rect(
@@ -848,8 +848,6 @@ class OlinopolyView:
                     1
                 )
 
-                self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5))
-                self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5))
 
         # Profile
         for i in range(self.model.num_of_teams):
