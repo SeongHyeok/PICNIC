@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Debug options
 ############################################################################
 
-g_debug_dice = False
+g_debug_dice = True
 
 ############################################################################
 # Global variabless
@@ -49,8 +49,8 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 850
-g_screen_board_height = 850
+g_screen_board_width = 600
+g_screen_board_height = 600
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
@@ -116,11 +116,20 @@ g_chance_card_position = [7, 13, 21, 29]
 
 g_softdsg_card_position = [35]
 
+# Current turn information area
+g_current_turn_area_rect = (
+    g_screen_board_width * 0.15,
+    g_screen_board_height * 0.12,
+    g_screen_board_width * 0.35,
+    g_screen_board_height * 0.06
+)
+g_current_turn_str = "Current Turn - %s"
+
 # Complete area (for completed markers)
 g_complete_area_rect = (
-    g_screen_board_width * 0.2,
+    g_screen_board_width * 0.15,
     g_screen_board_height * 0.2,
-    g_screen_board_width * 0.3,
+    g_screen_board_width * 0.35,
     g_screen_board_height * 0.2
 )
 g_complete_area_marker_width = g_map_block_width / 2
@@ -138,7 +147,7 @@ g_marker_initial_positions = [  # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width + g_screen_status_width * 3 / 4, g_screen_board_height * 0.2 / 2)
 ]
 
-#Profile Area
+# Profile Area
 g_profile_main_rect = (
     g_screen_board_width,
     0,
@@ -177,8 +186,9 @@ assert 1 <= g_max_marker_on_map_block <= 4
 
 g_default_name = ["Steven", "Inseong", "Danny", "Paul"]
 g_default_money = 500
+g_tuition = 100
 
-debug_dice = False
+g_is_local_version = True
 
 ############################################################################
 # Model Classes
@@ -197,7 +207,7 @@ class OlinopolyModel:
         # N: ...
         self.current_state = 1
 
-        self.current_team = 0
+        self.current_team_number = 0
 
         self.my_team_number = 0
 
@@ -263,15 +273,25 @@ class OlinopolyModel:
         for i in range(g_max_team_num):
             self.markers.append([]) # for each team
 
-        for i in range(self.num_of_teams):
+        for i in range(self.num_of_teams):  # for each team
             visible = True if i == self.my_team_number else False
-            for j in range(4):
+            for j in range(4):  # for each class
                 init_x, init_y = g_marker_initial_positions[j]
                 marker = Marker(
                     (init_x, init_y, g_screen_status_width / 4, g_screen_board_height * 0.2 / 2),
-                    'i', visible, self.my_team_number, j, None
+                    'i', visible, i, j, None
                 )
                 self.markers[i].append(marker)
+
+        ##############################
+        # Current turn information area
+        self.current_turn_area = CurrentTurnArea(
+            g_current_turn_area_rect, 'c', True
+        )
+        self.current_turn_area.font_pos = (
+            g_current_turn_area_rect[0] + 10,
+            g_current_turn_area_rect[1] + 10
+        )
 
         ##############################
         # Create complete area
@@ -324,6 +344,37 @@ class OlinopolyModel:
     def setState(self, target_state):
         self.current_state = target_state
 
+    def changeToNextTeam(self):
+        logger.debug("Previous team: %d" % (self.current_team_number))
+
+        if self.current_team_number == self.num_of_teams - 1:   # if: last team
+            self.changeCurrentTeam(0)
+        else:
+            self.changeCurrentTeam(self.current_team_number + 1)    # change to next team
+
+        logger.debug("Current team: %d" % (self.current_team_number))
+
+    def changeCurrentTeam(self, target_team):
+        self.current_team_number = target_team
+        if g_is_local_version:
+            self.my_team_number = self.current_team_number
+
+        if g_is_local_version:
+            self.updateProfilePosition()
+        self.updateMarkerVisibility()
+
+    def updateMarkerVisibility(self):
+        for i in range(self.num_of_teams):
+            for marker in self.markers[i]:
+                if 0 <= marker.block_pos < g_map_num_blocks:
+                    marker.is_visible = True
+                # if marker is my marker
+                elif marker.block_pos == None:
+                    if i == self.my_team_number:
+                        marker.is_visible = True
+                    else:
+                        marker.is_visible = False
+
     def moveMarker(self, team, player, target_pos, move_other_together=False):
         logger.debug("#########################")
         logger.debug("moveMarker() Enter")
@@ -367,15 +418,46 @@ class OlinopolyModel:
             self.completed_markers.append((team, player))
 
         else:   # add to current map block
-            self.map_blocks[target_pos].markers_on_block.append([team, player])
-            # change x, y position of marker based on target map block
             map_block = self.map_blocks[target_pos]
             markers = map_block.markers_on_block
             current_len = len(markers)
+
+            # if there is another player's markers, they are caught by current marker
+            if current_len > 0:
+                if markers[0][0] != team:
+                    markers = []
+                    for marker in map_block.markers_on_block:
+                        markers.append(marker)
+                    for marker in markers:
+                        t, p = marker
+                        logger.debug("marker %d,%d is moved to the beginning" % (t, p))
+                        prev = self.markers[t][p].block_pos
+                        self.markers[t][p].block_pos = None
+
+                        x, y = g_marker_initial_positions[p]
+                        w = g_screen_status_width / 4
+                        h = g_screen_board_height * 0.2 / 2
+                        self.markers[t][p].rect = (
+                            x, y, w, h
+                        )
+                        self.markers[t][p].reloadImage()
+
+                        # remove other markers from the map block
+                        self.map_blocks[prev].markers_on_block.remove([t, p])
+                    self.updateMarkerVisibility()
+
+            self.map_blocks[target_pos].markers_on_block.append([team, player])
+
+            map_block = self.map_blocks[target_pos]
+            markers = map_block.markers_on_block
+            current_len = len(markers)
+
+            # change x, y position of marker based on target map block
+            logger.debug("current length of markers in the target map block: [%d]" % (current_len))
             for i in range(current_len):
-                logger.debug("i: %d" % (i))
                 marker = markers[i]
                 team, player = marker
+                logger.debug("i: %d / t:%d, p:%d" % (i, team, player))
 
                 x = map_block.rect[0] + (g_map_block_width / current_len) * i
                 y = map_block.rect[1]
@@ -390,8 +472,10 @@ class OlinopolyModel:
 
         logger.debug("final target: %d" % (target_pos))
 
-        # remove from previous map block
-        if prev_pos != None:
+
+        if prev_pos == None:    # pay tuition
+            self.playerdata[team].money -= g_tuition
+        else:   # remove from previous map block
             self.map_blocks[prev_pos].markers_on_block.remove([team, player])
 
             # move others in the same map block
@@ -433,7 +517,7 @@ class OlinopolyModel:
         other_profile_x = g_profile_other_first_rect[0]
         other_name_x = g_status_other_first_rect[0] + g_status_other_first_rect[2] * 0.1
         for i in range(self.num_of_teams):
-            if i == self.current_team:
+            if i == self.my_team_number:
                 self.user_profiles[i].rect = g_profile_main_rect
                 self.user_status[i].rect = g_status_main_rect
                 self.user_status[i].name_pos = (
@@ -471,10 +555,6 @@ class OlinopolyModel:
                 other_name_x += g_screen_status_width / (self.num_of_teams - 1)
 
             self.user_profiles[i].reloadImage()
-
-    def changeCurrentTeam(self, target_team):
-        self.current_team = target_team
-        self.updateProfilePosition()
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -545,6 +625,12 @@ class Marker(Drawable):
                return False
         else:
             return False
+
+class CurrentTurnArea(Drawable):
+    def __init__(self, rect, c_or_i, is_visible):
+        super(CurrentTurnArea, self).__init__(rect, c_or_i, is_visible)
+        self.font = pygame.font.SysFont('Verdana', 16, False)
+        self.font_pos = (0, 0)
 
 class CompleteArea(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
@@ -642,6 +728,7 @@ class OlinopolyView:
         self.screen = screen
 
     def draw(self):
+
         #fill in background color
         self.screen.fill(pygame.Color(236, 245, 235))
 
@@ -682,6 +769,26 @@ class OlinopolyView:
                         marker.rect,
                         1
                     )
+
+        # Current turn informatoin area
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.current_turn_area,
+            1
+        )
+        msg = g_current_turn_str % (
+            self.model.playerdata[self.model.current_team_number].name
+        )
+        current_turn = self.model.current_turn_area.font.render(
+            msg,
+            True,
+            (10, 10, 115)
+        )
+        self.screen.blit(
+            current_turn,
+            self.model.current_turn_area.font_pos
+        )
 
         # Complete area
         pygame.draw.rect(
@@ -894,7 +1001,8 @@ if __name__ == "__main__":
                     model.setState(2)
                 elif model.current_state == 2:
                     result = False
-                    for player in model.markers[model.my_team_number]:
+                    #for player in model.markers[model.my_team_number]:
+                    for player in model.markers[model.current_team_number]:
                         if player.pressed(x, y) and player.block_pos != -1:
                             team = player.team
                             player = player.player
@@ -909,12 +1017,11 @@ if __name__ == "__main__":
                             break
                     if result:
                         model.setState(1)
+                        # Change to next team
+                        model.changeToNextTeam()
 
         view.draw()
         time.sleep(.001)
     # While end
     ####################
     pygame.quit()
-
-# [TODO] completed marker
-# [TODO] overlapped markers
