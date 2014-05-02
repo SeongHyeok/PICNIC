@@ -1,1 +1,10 @@
-Period when ninjas(tutors) teach ninjees(tutee)
+Period when ninjas(tutors) teach ninjees(tutee).
+  Ninja stands for Need Information Now Just Ask.
+ Here at Olin, we call our course assistants 
+NINJAs. They do much more than normal course
+ assistants. They are more like tutors that are 
+available almost whenever we need them. They
+ hold office hours in the lounges, they hold
+ tutorials in the labs, and they listen to us
+ whine and groan whenever we have too much 
+work in their class. They're like little parents.
