@@ -49,14 +49,22 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 800
-g_screen_board_height = 800
+g_screen_board_width = 850
+g_screen_board_height = 850
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
 g_screen_height = g_screen_board_height # DO NOT CHANGE
 
 g_line_width = 2
+
+# Popup Screen
+g_popup_screen_rect = (
+    g_screen_board_width * 0.3,
+    g_screen_board_height * 0.3,
+    g_screen_board_width * 0.6,
+    g_screen_board_height * 0.6
+)
 
 # Map
 g_map_num_blocks_in_line = 10
@@ -727,6 +735,8 @@ class OlinopolyView:
         self.model = model
         self.screen = screen
 
+        self.popup_option_font = pygame.font.SysFont('Arial', 20, False)
+
     def draw(self):
 
         #fill in background color
@@ -886,7 +896,28 @@ class OlinopolyView:
                 money,
                 self.model.user_status[i].money_pos
             )
+        #pygame.display.flip()
+
+    def drawPopup(self):
+        popupSurf = pygame.Surface((int(g_popup_screen_rect[2]), int(g_popup_screen_rect[3])))
+        options = ['Buy',
+                   'Cancel']
+        top = g_popup_screen_rect[1]
+        for i in range(len(options)):
+            textSurf = self.popup_option_font.render(options[i], 1, (0, 50, 100))
+            textRect = textSurf.get_rect()
+            textRect.top = top
+            textRect.left = g_popup_screen_rect[0]
+            top += pygame.font.Font.get_linesize(self.popup_option_font)
+            popupSurf.blit(textSurf, textRect)
+        popupRect = popupSurf.get_rect()
+        popupRect.centerx = g_popup_screen_rect[0] + g_popup_screen_rect[2] / 2
+        popupRect.centery = g_popup_screen_rect[1] + g_popup_screen_rect[3] / 2
+        self.screen.blit(popupSurf, popupRect)
+
+        #pygame.display.update()
         pygame.display.flip()
+
 
 ############################################################################
 # Controller Classes
@@ -1019,6 +1050,7 @@ if __name__ == "__main__":
                         model.changeToNextTeam()
 
         view.draw()
+        view.drawPopup()
         time.sleep(.001)
     # While end
     ####################
