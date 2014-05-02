@@ -1,3 +1,1 @@
-At the beginning of semester,
-student should pay tuition
-and other fees.
+At the beginning of semester, \n student should pay tuition \n and other fees.
