@@ -240,7 +240,7 @@ class OlinopolyModel:
         self.dice_number = None
 
         # Popup dialog
-        self.popup_state = True
+        self.popup_state = False
         self.popup_option_area = []
         for i in range(g_max_popup_option_number):
             self.popup_option_area.append(None)
