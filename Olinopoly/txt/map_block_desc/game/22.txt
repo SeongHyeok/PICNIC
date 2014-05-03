@@ -1,1 +1,3 @@
 Dining Hall
+price: $18,000
+return: $13,000

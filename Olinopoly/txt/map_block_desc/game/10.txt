@@ -1,1 +1,7 @@
 Spring Formal
+you lose money based upon
+which of your markers lands.
+freshman: $5,000
+sophomore: $10,000
+junior: $15,000
+senior: $20,000

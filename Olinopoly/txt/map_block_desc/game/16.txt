@@ -1,1 +1,3 @@
 Library
+price: $21,000
+return: $8,000

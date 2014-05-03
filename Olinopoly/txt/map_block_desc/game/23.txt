@@ -1,1 +1,3 @@
 Jounior Course
+price: $20,000
+return: $15,000
