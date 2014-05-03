@@ -1007,39 +1007,16 @@ class DiceAnimationController:
     def __init__(self, model):
         self.model = model
 
-    def randomDice(self, randomdice_count):
-        self.randomdice_count = randomdice_count
+    def randomDice(self):
         if self.randomdice_count == 0: # 0 : start animation
-            self.random_state = 0
-            if self.random_state == 0:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 1
-            elif self.random_state == 1:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 2
-            elif self.random_state == 2:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 3
-            elif self.random_state == 3:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 4
-            elif self.random_state == 4:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 5
-            elif self.random_state == 5:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 6
-            elif self.random_state == 6:
-                current_random_dice_num = random.randint(1,6)
-                self.random_state = 7
-            elif self.random_state == 7:
-                self.randomdice_count = 1
-                #current_random_dice_num = self.model.dice_number
-
+            current_random_dice_num = random.randint(1,6)
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
+            self.random_state += 1
+            if self.random_state == 7:
+                self.randomdice_count = 1
 
-        if self.randomdice_count == 1: # 1 : stop animation and show real dice num
+        elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
@@ -1092,7 +1069,7 @@ if __name__ == "__main__":
                 model.blinkSoftDsg()
 
             if event.type == USEREVENT + 3:
-                controller_dice_animation.randomDice(controller_dice_animation.randomdice_count)
+                controller_dice_animation.randomDice()
 
             if event.type == MOUSEMOTION:
                 controller_mouse.handleMouseEvent(event)
@@ -1102,6 +1079,7 @@ if __name__ == "__main__":
                 if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
                     controller_dice.rollDice()
                     controller_dice_animation.randomdice_count = 0
+                    controller_dice_animation.random_state = 0
                     model.setState(2)
                 elif model.current_state == 2:
                     result = False
