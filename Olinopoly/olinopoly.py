@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 # Debug options
 ############################################################################
 
-g_debug_dice = True
+g_debug_dice = False
 
 ############################################################################
 # Global variabless
@@ -43,6 +43,7 @@ g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
 g_marker_image_dir_path = os.path.join(g_image_dir_path, "marker")
 g_olin_logo_dir_path = os.path.join(g_image_dir_path, "logo")
 g_profile_dir_path = os.path.join(g_image_dir_path, "profile")
+g_dice_dir_path = os.path.join(g_image_dir_path, "dice")
 
 g_txt_dir_path = os.path.join(os.curdir, "txt")
 g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/game")
@@ -80,9 +81,9 @@ g_map_enable_softdsg_blinking = True
 # Button
 g_button_roll_dice_rect = (
     g_screen_board_width * 0.6,
-    g_screen_board_height * 0.2,
+    g_screen_board_height * 0.12,
     g_screen_board_width * 0.2,
-    g_screen_board_height * 0.2,
+    g_screen_board_height * 0.06
 )
 
 # Olin Logo
@@ -175,6 +176,14 @@ g_status_other_first_rect = (
     g_screen_board_height * 0.5,
     g_screen_status_width / 3.0,
     g_screen_board_height * 0.1
+)
+
+# Dice Image Area
+g_dice_image_rect = (
+    g_screen_board_width * 0.6,
+    g_screen_board_height * 0.2,
+    g_screen_board_width * 0.2,
+    g_screen_board_height * 0.2,
 )
 
 # Game data
@@ -339,6 +348,13 @@ class OlinopolyModel:
             self.user_status.append(status)
 
         self.updateProfilePosition()
+
+        ##############################
+        # Create Rolling Dice "Animation"
+
+        self.rolling_dice = DiceImage(
+            g_dice_image_rect, 'i', True, self.dice_number
+        )
 
 
     def setState(self, target_state):
@@ -556,6 +572,7 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
+
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
         self.rect = rect    # rect is (x, y, width, height)
@@ -717,6 +734,37 @@ class PlayerData:
         self.name = name
         self.money = money
         self.team = team
+
+class DiceImage(Drawable):
+    def __init__(self, rect, c_or_i, is_visible, dice_num):
+        super(DiceImage, self).__init__(rect, c_or_i, is_visible)
+        #self.dice_num = dice_num
+        self.renderDiceImg(dice_num)
+        #self.realDiceImg()
+
+    def renderDiceImg(self, dice_num):
+        if dice_num == None:
+            self.img = pygame.transform.scale(
+                pygame.image.load(os.path.join(g_dice_dir_path, "1.gif")),
+                (int(self.rect[2]), int(self.rect[3])))
+        else:
+            self.img = pygame.transform.scale(
+                pygame.image.load(os.path.join(g_dice_dir_path, "%d.gif" % (dice_num))),
+                (int(self.rect[2]), int(self.rect[3]))
+            )
+
+#    def realDiceImg(self):
+#        if self.dice_num == None:
+#            self.img = pygame.transform.scale(
+#                pygame.image.load(os.path.join(g_dice_dir_path, "0.gif")),
+#                ((int(self.rect[2])), int(self.rect[3]))
+#            )
+#
+#        else:
+#            self.img = pygame.transform.scale(
+#            pygame.image.load(os.path.join(g_dice_dir_path, "%d.gif" % (self.dice_num))),
+#            (int(self.rect[2]), int(self.rect[3]))
+#        )
 
 ############################################################################
 # View Classes
@@ -886,6 +934,14 @@ class OlinopolyView:
                 money,
                 self.model.user_status[i].money_pos
             )
+
+        # Rolling Dice Image
+        self.screen.blit(
+            self.model.rolling_dice.img,
+            (self.model.rolling_dice.rect[0], self.model.rolling_dice.rect[1])
+        )
+
+
         pygame.display.flip()
 
 ############################################################################
@@ -947,6 +1003,22 @@ class OlinopolyDiceController:
             self.model.dice_number = random.randint(1, 6)
         logger.debug("set dice num: %d" % (self.model.dice_number))
 
+class DiceAnimationController:
+    def __init__(self, model):
+        self.model = model
+
+    def randomDice(self, randomdice_count):
+        self.randomdice_count = randomdice_count
+        if self.randomdice_count == 0: # 0 : start animation
+            for i in range(6):
+                current_random_dice_num = random.randint(1,6)
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+            self.randomdice_count = 1
+
+        elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
+            current_random_dice_num = self.model.dice_number
+            self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+
 ############################################################################
 # Main
 ############################################################################
@@ -967,12 +1039,18 @@ if __name__ == "__main__":
     controller_mouse = OlinopolyMouseController(model)
     controller_mouse_over = OlinopolyMouseOverController(model)
     controller_dice = OlinopolyDiceController(model)
+    controller_dice_animation = DiceAnimationController(model)
+
+    # initialize
+    controller_dice_animation.randomdice_count = 1
 
     # Timer for events
     # 1 - Mouse over
     # 2 - Blinking SoftDsg
+    # 3 - Random Dice Image
     pygame.time.set_timer(USEREVENT + 1, 500)
     pygame.time.set_timer(USEREVENT + 2, 300)
+    pygame.time.set_timer(USEREVENT + 3, 1000)
 
     running = True
     ####################
@@ -989,6 +1067,9 @@ if __name__ == "__main__":
             if event.type == USEREVENT + 2:
                 model.blinkSoftDsg()
 
+            if event.type == USEREVENT + 3:
+                controller_dice_animation.randomDice(controller_dice_animation.randomDice(controller_dice_animation.randomdice_count))
+
             if event.type == MOUSEMOTION:
                 controller_mouse.handleMouseEvent(event)
 
@@ -996,6 +1077,7 @@ if __name__ == "__main__":
                 x, y = pygame.mouse.get_pos()
                 if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
                     controller_dice.rollDice()
+                    controller_dice_animation.randomdice_count = 0
                     model.setState(2)
                 elif model.current_state == 2:
                     result = False
