@@ -1014,28 +1014,36 @@ class DiceAnimationController:
             if self.random_state == 0:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 1:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 2:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 3:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 4:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 5:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 6:
                 current_random_dice_num = random.randint(1,6)
                 self.random_state += 1
+                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
             elif self.random_state == 7:
-                current_random_dice_num = self.model.dice_number
+                self.randomdice_count = 1
+                #current_random_dice_num = self.model.dice_number
 
-            self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+           # self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
 
         elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
