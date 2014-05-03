@@ -60,10 +60,10 @@ g_line_width = 2
 
 # Popup Screen
 g_popup_screen_rect = (
-    g_screen_board_width * 0.3,
-    g_screen_board_height * 0.3,
-    g_screen_board_width * 0.6,
-    g_screen_board_height * 0.6
+    g_screen_width * 0.2,
+    g_screen_height * 0.25,
+    g_screen_width * 0.6,
+    g_screen_height * 0.6
 )
 
 # Map
@@ -187,14 +187,16 @@ g_status_other_first_rect = (
 
 # Game data
 g_max_team_num = 4
-g_max_marker_on_map_block = 3
+g_max_marker_on_one_map_block = 3
 
 assert 2 <= g_max_team_num <= 4
-assert 1 <= g_max_marker_on_map_block <= 4
+assert 1 <= g_max_marker_on_one_map_block <= 4
 
 g_default_name = ["Steven", "Inseong", "Danny", "Paul"]
 g_default_money = 500
 g_tuition = 100
+
+g_max_popup_option_number = 4
 
 g_is_local_version = True
 
@@ -228,11 +230,22 @@ class OlinopolyModel:
 
         self.dice_number = None
 
+        # Popup dialog
+        self.popup_state = False
+        self.popup_option_area = []
+        for i in range(g_max_marker_on_one_map_block):
+            self.popup_option_area.append(None)
+        self.popup_options = [
+            "Option 1",
+            "Option 2"
+        ]
+        self.popup_question = "Q: "
+
         # Set initial player data
-        self.playerdata = []
+        self.player_data = []
         for i in range(self.num_of_teams):
-            playerdata = PlayerData(g_default_name[i], g_default_money, i)
-            self.playerdata.append(playerdata)
+            player_data = PlayerData(g_default_name[i], g_default_money, i)
+            self.player_data.append(player_data)
 
 
         ##############################
@@ -397,7 +410,7 @@ class OlinopolyModel:
             target_pos = -1 # -1 means completed
         else:
             # Check availabiltiy
-            if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_map_block:
+            if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_one_map_block:
                 logger.debug("Failed to move marker: max reached")
                 logger.debug("moveMarker() Leave")
                 logger.debug("#########################")
@@ -482,7 +495,7 @@ class OlinopolyModel:
 
 
         if prev_pos == None:    # pay tuition
-            self.playerdata[team].money -= g_tuition
+            self.player_data[team].money -= g_tuition
         else:   # remove from previous map block
             self.map_blocks[prev_pos].markers_on_block.remove([team, player])
 
@@ -735,7 +748,8 @@ class OlinopolyView:
         self.model = model
         self.screen = screen
 
-        self.popup_option_font = pygame.font.SysFont('Arial', 20, False)
+        self.font_question = pygame.font.SysFont('Courier New', 35, True)
+        self.font_option = pygame.font.SysFont('Arial', 30, True)
 
     def draw(self):
 
@@ -788,7 +802,7 @@ class OlinopolyView:
             1
         )
         msg = g_current_turn_str % (
-            self.model.playerdata[self.model.current_team_number].name
+            self.model.player_data[self.model.current_team_number].name
         )
         current_turn = self.model.current_turn_area.font.render(
             msg,
@@ -858,7 +872,6 @@ class OlinopolyView:
                     1
                 )
 
-
         # Profile
         for i in range(self.model.num_of_teams):
             self.screen.blit(
@@ -878,12 +891,12 @@ class OlinopolyView:
                 1
             )
             name = self.model.user_status[i].font_name.render(
-                str(self.model.playerdata[i].name),
+                str(self.model.player_data[i].name),
                 True,
                 (10, 10, 115)
             )
             money = self.model.user_status[i].font_money.render(
-                str(self.model.playerdata[i].money),
+                str(self.model.player_data[i].money),
                 True,
                 (10, 10, 115)
             )
@@ -896,24 +909,70 @@ class OlinopolyView:
                 money,
                 self.model.user_status[i].money_pos
             )
-        #pygame.display.flip()
+
+        if not self.model.popup_state:
+            pygame.display.flip()
 
     def drawPopup(self):
-        popupSurf = pygame.Surface((int(g_popup_screen_rect[2]), int(g_popup_screen_rect[3])))
-        options = ['Buy',
-                   'Cancel']
-        top = g_popup_screen_rect[1]
-        for i in range(len(options)):
-            textSurf = self.popup_option_font.render(options[i], 1, (0, 50, 100))
-            textRect = textSurf.get_rect()
-            textRect.top = top
-            textRect.left = g_popup_screen_rect[0]
-            top += pygame.font.Font.get_linesize(self.popup_option_font)
-            popupSurf.blit(textSurf, textRect)
-        popupRect = popupSurf.get_rect()
-        popupRect.centerx = g_popup_screen_rect[0] + g_popup_screen_rect[2] / 2
-        popupRect.centery = g_popup_screen_rect[1] + g_popup_screen_rect[3] / 2
-        self.screen.blit(popupSurf, popupRect)
+        popup_surface = pygame.Surface((int(g_popup_screen_rect[2]), int(g_popup_screen_rect[3])))
+        popup_surface.fill(pygame.Color(149, 186, 245))
+
+        #question = "Q: %s, what will you do?" % (self.model.player_data[self.model.current_team_number].name)
+
+        # maximum number of option: 4
+        assert len(self.model.popup_options) <= g_max_popup_option_number
+
+        top = g_popup_screen_rect[3] * 0.1
+        left = g_popup_screen_rect[2] * 0.1
+
+        # Display question
+        text_surface = self.font_question.render(self.model.popup_question, 1, (0, 50, 100))
+        text_rect = text_surface.get_rect()
+        text_rect.top = top
+        text_rect.left = left
+        popup_surface.blit(text_surface, text_rect)
+
+        top += g_popup_screen_rect[3] * 0.2
+        left = g_popup_screen_rect[2] * 0.15
+
+        # Display options
+        for i in range(len(self.model.popup_options)):
+            text_surface = self.font_option.render(self.model.popup_options[i], 1, (0, 50, 100))
+            text_rect = text_surface.get_rect()
+            text_rect.top = top
+            text_rect.left = left
+
+            """pygame.draw.rect(
+                self.screen,
+                pygame.Color(19, 110, 13),
+                (g_popup_screen_rect[0] + left,
+                 g_popup_screen_rect[1] + top,
+                 g_popup_screen_rect[2] * 0.7,
+                 pygame.font.Font.get_linesize(self.font_option) * 1.5
+                 ),
+                2
+            )"""
+            rect = (left,
+                    top,
+                    g_popup_screen_rect[2] * 0.7,
+                    pygame.font.Font.get_linesize(self.font_option) * 1.5
+            )
+            self.model.popup_option_area[i] = rect
+            pygame.draw.rect(
+                popup_surface,
+                pygame.Color(19, 110, 13),
+                rect,
+                2
+            )
+
+            top += pygame.font.Font.get_linesize(self.font_option) + g_popup_screen_rect[3] * 0.05
+
+            popup_surface.blit(text_surface, text_rect)
+
+        popup_rect = popup_surface.get_rect()
+        popup_rect.centerx = g_popup_screen_rect[0] + g_popup_screen_rect[2] / 2
+        popup_rect.centery = g_popup_screen_rect[1] + g_popup_screen_rect[3] / 2
+        self.screen.blit(popup_surface, popup_rect)
 
         #pygame.display.update()
         pygame.display.flip()
@@ -1014,43 +1073,59 @@ if __name__ == "__main__":
                 running = False
                 break
 
-            if event.type == USEREVENT + 1:
-                controller_mouse_over.check()
+            if model.popup_state:
+                if event.type == MOUSEBUTTONUP:
+                    x, y = pygame.mouse.get_pos()
+                    logger.debug("Click when popup - x: %d / y: %d" % (x, y))
+                    for i in range(len(model.popup_options)):
+                        left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
+                        right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
+                        top = g_popup_screen_rect[1] + model.popup_option_area[i][1]
+                        bottom = g_popup_screen_rect[1] + model.popup_option_area[i][1] + model.popup_option_area[i][3]
+                        if left < x < right:
+                            if top < y < bottom:
+                                logger.debug("Clicked popup option: %d" % (i + 1))
 
-            if event.type == USEREVENT + 2:
-                model.blinkSoftDsg()
+                                break
+            else:
+                if event.type == USEREVENT + 1:
+                    controller_mouse_over.check()
 
-            if event.type == MOUSEMOTION:
-                controller_mouse.handleMouseEvent(event)
+                if event.type == USEREVENT + 2:
+                    model.blinkSoftDsg()
 
-            if event.type == MOUSEBUTTONUP:
-                x, y = pygame.mouse.get_pos()
-                if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
-                    controller_dice.rollDice()
-                    model.setState(2)
-                elif model.current_state == 2:
-                    result = False
-                    #for player in model.markers[model.my_team_number]:
-                    for player in model.markers[model.current_team_number]:
-                        if player.pressed(x, y) and player.block_pos != -1:
-                            team = player.team
-                            player = player.player
-                            logger.debug("Dice Num: %d" % (model.dice_number))
-                            if model.markers[team][player].block_pos == None:
-                                target_pos = model.dice_number
-                            else:
-                                target_pos = model.markers[team][player].block_pos + model.dice_number
-                            result = model.moveMarker(
-                                team, player, target_pos, True
-                            )
-                            break
-                    if result:
-                        model.setState(1)
-                        # Change to next team
-                        model.changeToNextTeam()
+                if event.type == MOUSEMOTION:
+                    controller_mouse.handleMouseEvent(event)
+
+                if event.type == MOUSEBUTTONUP:
+                    x, y = pygame.mouse.get_pos()
+                    if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
+                        controller_dice.rollDice()
+                        model.setState(2)
+                    elif model.current_state == 2:
+                        result = False
+                        for player in model.markers[model.my_team_number]:
+                            if player.pressed(x, y) and player.block_pos != -1:
+                                team = player.team
+                                player = player.player
+                                logger.debug("Dice Num: %d" % (model.dice_number))
+                                if model.markers[team][player].block_pos == None:
+                                    target_pos = model.dice_number
+                                else:
+                                    target_pos = model.markers[team][player].block_pos + model.dice_number
+                                result = model.moveMarker(
+                                    team, player, target_pos, True
+                                )
+                                break
+                        if result:
+                            model.setState(1)
+                            # Change to next team
+                            model.changeToNextTeam()
 
         view.draw()
-        view.drawPopup()
+        if model.popup_state:
+            view.drawPopup()
+
         time.sleep(.001)
     # While end
     ####################
