@@ -1,1 +1,3 @@
 Sophomore course
+price: $15,000
+return: $10,000

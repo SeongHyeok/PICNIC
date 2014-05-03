@@ -1,7 +1,7 @@
 This is Senior Capstone Program
-in Engineering course in Olin.
-In this class, seniors work in
-multi-disciplinary teams to
-provide innovative solutions
-to a company’s real-world
-problems.
+in Engineering course in Olin. 
+In this class, seniors work 
+in multi-disciplinary teams to 
+provide innovative solutions to 
+real-world problems.
+

@@ -1,1 +1,5 @@
-Introductory class for freshman
+OIE stands for Olin Introductory 
+Experience.This course aims to 
+introduce and develop skills that 
+facilitate a successful transition
+into Olin. 

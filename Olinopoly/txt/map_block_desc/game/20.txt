@@ -1,1 +1,3 @@
 East Hall
+price: $25,000
+return: $15,000

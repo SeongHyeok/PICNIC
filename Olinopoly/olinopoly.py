@@ -872,13 +872,13 @@ class OlinopolyView:
                 for i in range(l):
                     msg_game = self.model.map_block_info_game.txt_list[self.model.mouseover_map_block][i]
                     title_game = font_map_block_info.render(msg_game, True, (10, 10, 115))
-                    self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5 + i*15))
+                    self.screen.blit(title_game, (g_game_des_rect[0] + 5, g_game_des_rect[1] + 5 + i*20))
 
                 l = len(self.model.map_block_info_place.txt_list[self.model.mouseover_map_block])
                 for i in range(l):
                     msg_place = self.model.map_block_info_place.txt_list[self.model.mouseover_map_block][i]
                     title_place = font_map_block_info.render(msg_place, True, (10, 10, 115))
-                    self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5 + i*15))
+                    self.screen.blit(title_place, (g_place_des_rect[0] + 5, g_place_des_rect[1] + 5 + i*20))
 
                 # Game Description
                 pygame.draw.rect(
