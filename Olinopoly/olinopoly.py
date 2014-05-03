@@ -774,19 +774,6 @@ class DiceImage(Drawable):
                 (int(self.rect[2]), int(self.rect[3]))
             )
 
-#    def realDiceImg(self):
-#        if self.dice_num == None:
-#            self.img = pygame.transform.scale(
-#                pygame.image.load(os.path.join(g_dice_dir_path, "0.gif")),
-#                ((int(self.rect[2])), int(self.rect[3]))
-#            )
-#
-#        else:
-#            self.img = pygame.transform.scale(
-#            pygame.image.load(os.path.join(g_dice_dir_path, "%d.gif" % (self.dice_num))),
-#            (int(self.rect[2]), int(self.rect[3]))
-#        )
-
 ############################################################################
 # View Classes
 ############################################################################
@@ -1108,6 +1095,7 @@ class DiceAnimationController:
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
+
 ############################################################################
 # Main
 ############################################################################
@@ -1184,7 +1172,7 @@ if __name__ == "__main__":
                         controller_dice_animation.randomdice_count = 0
                         controller_dice_animation.random_state = 0
                         model.setState(2)
-                    elif model.current_state == 2:
+                    elif model.current_state == 2 and controller_dice_animation.randomdice_count == 1:
                         result = False
                         for player in model.markers[model.my_team_number]:
                             if player.pressed(x, y) and player.block_pos != -1:
