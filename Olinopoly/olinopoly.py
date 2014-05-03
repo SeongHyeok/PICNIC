@@ -1013,40 +1013,33 @@ class DiceAnimationController:
             self.random_state = 0
             if self.random_state == 0:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 1
             elif self.random_state == 1:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 2
             elif self.random_state == 2:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 3
             elif self.random_state == 3:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 4
             elif self.random_state == 4:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 5
             elif self.random_state == 5:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 6
             elif self.random_state == 6:
                 current_random_dice_num = random.randint(1,6)
-                self.random_state += 1
-                self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+                self.random_state = 7
             elif self.random_state == 7:
                 self.randomdice_count = 1
                 #current_random_dice_num = self.model.dice_number
 
-           # self.model.rolling_dice.renderDiceImg(current_random_dice_num)
+            self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
 
-        elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
+        if self.randomdice_count == 1: # 1 : stop animation and show real dice num
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
@@ -1081,7 +1074,7 @@ if __name__ == "__main__":
     # 3 - Random Dice Image
     pygame.time.set_timer(USEREVENT + 1, 500)
     pygame.time.set_timer(USEREVENT + 2, 300)
-    pygame.time.set_timer(USEREVENT + 3, 1000)
+    pygame.time.set_timer(USEREVENT + 3, 250)
 
     running = True
     ####################
