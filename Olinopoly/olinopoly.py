@@ -1013,7 +1013,7 @@ class DiceAnimationController:
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
             self.random_state += 1
-            if self.random_state == 7:
+            if self.random_state == 10:
                 self.randomdice_count = 1
 
         elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
