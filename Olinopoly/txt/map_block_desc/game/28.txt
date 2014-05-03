@@ -1,1 +1,3 @@
 Large project building
+price: $30,000
+return: $15,000

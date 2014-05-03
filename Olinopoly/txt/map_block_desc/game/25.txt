@@ -1,1 +1,3 @@
 Parking lot B
+price: $28,000
+return: $16,000
