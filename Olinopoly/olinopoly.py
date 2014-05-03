@@ -242,11 +242,13 @@ class OlinopolyModel:
         # Popup dialog
         self.popup_state = False
         self.popup_option_area = []
-        for i in range(g_max_marker_on_one_map_block):
+        for i in range(g_max_popup_option_number):
             self.popup_option_area.append(None)
         self.popup_options = [
             "Option 1",
-            "Option 2"
+            "Option 2",
+            "Option 3",
+            "Option 4"
         ]
         self.popup_question = "Q: "
 
