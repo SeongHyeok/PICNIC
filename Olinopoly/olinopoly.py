@@ -123,6 +123,9 @@ g_place_des_rect = (
 g_chance_card_num = 30
 g_chance_card_position = [7, 13, 21, 29]
 
+g_location_position = [1, 5, 12, 16, 20, 22, 25, 28, 31]
+g_course_position = [2, 3, 11, 23, 30]
+g_event_position = [4, 6, 8, 9, 10, 14, 15, 17, 18, 24, 26, 27, 32, 33, 34]
 g_softdsg_card_position = [35]
 
 # Current turn information area
@@ -195,12 +198,6 @@ g_dice_image_rect = (
 )
 
 
-# Mapblocks and money
-g_location_buy_dict = {1:10000, 5:15000, 12:23000, 16:21000, 20:25000, 22:18000, 25:28000, 28:30000, 31:28000}
-g_location_pay_dict = {1:5000, 5:10000, 12:18000, 16:8000, 20:15000, 22:13000, 25:16000, 28:15000, 31:14000}
-g_course_buy_dict = {2:10000,3:10000,11:15000,23:20000, 30:25000, 35:30000}
-g_course_pay_dict = {2:7000, 3:7000, 11:10000, 23:15000, 30:20000, 35:20000}
-
 # Game data
 g_max_team_num = 4
 g_max_marker_on_one_map_block = 3
@@ -246,6 +243,8 @@ class OlinopolyModel:
 
         self.dice_number = None
 
+        self.possess_team = None
+
         # Popup dialog
         self.popup_state = False
         self.popup_option_area = []
@@ -264,7 +263,6 @@ class OlinopolyModel:
         for i in range(self.num_of_teams):
             player_data = PlayerData(g_default_name[i], g_default_money, i)
             self.player_data.append(player_data)
-
 
         ##############################
         # Create map blocks
@@ -295,7 +293,7 @@ class OlinopolyModel:
                         y = init_y + j * g_map_block_height
 
                 map_block_object = MapBlock(
-                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num
+                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num, self.possess_team
                 )
                 self.map_blocks.append(map_block_object)
                 num += 1
@@ -304,6 +302,16 @@ class OlinopolyModel:
             logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
                 i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
             )
+
+            if i in g_location_position or g_softdsg_card_position:
+                self.map_blocks[i].type = 0 # 0 = location
+            elif i in g_course_position:
+                self.map_blocks[i].type = 1 # 1 = course
+            elif i in g_event_position:
+                self.map_blocks[i].type = 2 # 2 = event
+            elif i in g_chance_card_position:
+                self.map_blocks[i].type = 3 # 3 = chance
+
 
         ##############################
         # Create markers
@@ -386,11 +394,8 @@ class OlinopolyModel:
             g_dice_image_rect, 'i', True, self.dice_number
         )
 
-        ##############################
-        # Create Block Features
-
-        self.location = LocationBlockFeat(g_location_buy_dict, g_location_pay_dict)
-        self.course = CourseBlockFeat(g_course_buy_dict, g_location_pay_dict)
+        for i in range(4):
+            self.mapblockPopup(self.map_blocks[i].type)
 
 
     def setState(self, target_state):
@@ -608,9 +613,15 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
-    ###############################################
-    # Implement Mapblock Features
-    ###############################################
+    def mapblockPopup(self, current_marker_pos_type):
+        if current_marker_pos_type == 0 or 1:
+            self.popup_state = True
+            self.popup_options = [
+            "Yes",
+            "No",
+        ]
+        self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
+
 
 
 
@@ -621,13 +632,16 @@ class Drawable(object):
         self.is_visible = is_visible
 
 class MapBlock(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, num):
+    def __init__(self, rect, c_or_i, is_visible, num, team):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
         # map block number
         self.num = num
 
         # count markers that are on a block
         self.markers_on_block = []   # pairs of [team, player]
+
+        # Which team possesses mapblock
+        self.team = team
 
         # image
         if c_or_i == 'i':
@@ -775,26 +789,6 @@ class DiceImage(Drawable):
                 (int(self.rect[2]), int(self.rect[3]))
             )
 
-
-###############
-# Mapblock Features
-###############
-class BlockFeat(object):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        self.mapblock_pay_dict = mapblock_pay_dict
-        self.mapblock_buy_dict = mapblock_buy_dict
-
-class LocationBlockFeat(BlockFeat):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        super(LocationBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
-
-class CourseBlockFeat(BlockFeat):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        super(CourseBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
-
-class EventBlockFeat:
-    def __init__(self):
-        pass
 
 
 ############################################################################
