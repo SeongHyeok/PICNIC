@@ -126,6 +126,9 @@ g_place_des_rect = (
 g_chance_card_num = 30
 g_chance_card_position = [7, 13, 21, 29]
 
+g_location_position = [1, 5, 12, 16, 20, 22, 25, 28, 31]
+g_course_position = [2, 3, 11, 23, 30]
+g_event_position = [4, 6, 8, 9, 10, 14, 15, 17, 18, 24, 26, 27, 32, 33, 34]
 g_softdsg_card_position = [35]
 
 # Current turn information area
@@ -213,11 +216,8 @@ g_text_box_rect = (
     g_map_block_height * 0.5
 )
 
+
 # Mapblocks and money
-g_location_buy_dict = {1:10000, 5:15000, 12:23000, 16:21000, 20:25000, 22:18000, 25:28000, 28:30000, 31:28000}
-g_location_pay_dict = {1:5000, 5:10000, 12:18000, 16:8000, 20:15000, 22:13000, 25:16000, 28:15000, 31:14000}
-g_course_buy_dict = {2:10000,3:10000,11:15000,23:20000, 30:25000, 35:30000}
-g_course_pay_dict = {2:7000, 3:7000, 11:10000, 23:15000, 30:20000, 35:20000}
 
 g_mapblock_price = [None, 10000, 10000, 10000, None,
                     15000, None, None, None, None,
@@ -233,6 +233,7 @@ g_mapblock_return = [None, 5000, 7000, 7000, None,
                      15000, None, 13000, 15000, None,
                      16000, None, None, 15000, None,
                      20000, 14000, None, None, None, 20000]
+
 
 # Game data
 g_max_team_num = 4
@@ -279,6 +280,10 @@ class OlinopolyModel:
 
         self.dice_number = None
 
+        #self.possess_team = None
+
+        self.current_land_block = None
+
         # Popup dialog
         self.popup_state = False
         self.popup_option_area = []
@@ -305,6 +310,7 @@ class OlinopolyModel:
 
         self.map_blocks = []
         num = 0
+
         for i in range(4):    # 0 ~ 3 (bottom, left, top and right)
             init_x, init_y = g_map_block_initial_positions[i]
 
@@ -326,16 +332,27 @@ class OlinopolyModel:
                         x = init_x
                         y = init_y + j * g_map_block_height
 
+
                 map_block_object = MapBlock(
-                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num
+                    (x, y, g_map_block_width, g_map_block_height), 'i',
+                    True, num, None, None
                 )
                 self.map_blocks.append(map_block_object)
                 num += 1
 
         for i in range(0, len(self.map_blocks)):
+            if (i in g_location_position) or (i in g_softdsg_card_position):
+                self.map_blocks[i].type = 0 # 0 = location
+            elif i in g_course_position:
+                self.map_blocks[i].type = 1 # 1 = course
+            elif i in g_event_position:
+                self.map_blocks[i].type = 2 # 2 = event
+            elif i in g_chance_card_position:
+                self.map_blocks[i].type = 3 # 3 = chance
             logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
                 i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
             )
+
 
         ##############################
         # Create markers
@@ -428,11 +445,12 @@ class OlinopolyModel:
             g_dice_image_rect, 'i', True, self.dice_number
         )
 
-        ##############################
-        # Create Block Features
-
-        self.location = LocationBlockFeat(g_location_buy_dict, g_location_pay_dict)
-        self.course = CourseBlockFeat(g_course_buy_dict, g_location_pay_dict)
+        ###############################
+        #self.mapblockPopup(
+         #   self.current_land_block,
+          #  self.current_land_block.type,
+           # self.current_land_block.team
+        #)
 
 
     def setState(self, target_state):
@@ -479,6 +497,7 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
+        self.current_land_block = self.map_blocks[target_pos]
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         else:
@@ -657,7 +676,20 @@ class OlinopolyModel:
     # Implement Mapblock Features
     ###############################################
 
-
+    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
+        print "block type is: ", current_pos_type
+        if (current_pos_type == 0) or (current_pos_type == 1):
+            if current_pos_team == None:
+                self.popup_state = True
+                self.popup_options = [
+                    "Yes",
+                    "No",
+                ]
+                self.popup_question = "Q: Would you like to buy"# for %d ?" % (g_mapblock_price[current_pos_num])
+        elif current_pos_type == 2:
+            pass
+        elif current_pos_type == 3:
+            pass
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -666,13 +698,19 @@ class Drawable(object):
         self.is_visible = is_visible
 
 class MapBlock(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, num):
+    def __init__(self, rect, c_or_i, is_visible, num, team, mapblock_type):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
         # map block number
         self.num = num
 
         # count markers that are on a block
         self.markers_on_block = []   # pairs of [team, player]
+
+        # Which team possesses mapblock
+        self.team = team
+
+        #type of mapblock
+        self.type = mapblock_type
 
         # image
         if c_or_i == 'i':
@@ -820,26 +858,6 @@ class DiceImage(Drawable):
                 (int(self.rect[2]), int(self.rect[3]))
             )
 
-
-###############
-# Mapblock Features
-###############
-class BlockFeat(object):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        self.mapblock_pay_dict = mapblock_pay_dict
-        self.mapblock_buy_dict = mapblock_buy_dict
-
-class LocationBlockFeat(BlockFeat):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        super(LocationBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
-
-class CourseBlockFeat(BlockFeat):
-    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
-        super(CourseBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
-
-class EventBlockFeat:
-    def __init__(self):
-        pass
 
 
 ############################################################################
@@ -1194,6 +1212,12 @@ class DiceAnimationController:
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
+class MapBlockFeatureController:
+    def __init__(self, model):
+        self.model = model
+
+    def buyMapBlock(self):
+        model.current_land_block.team = model.current_team_number
 
 ############################################################################
 # Main
@@ -1216,6 +1240,7 @@ if __name__ == "__main__":
     controller_mouse_over = OlinopolyMouseOverController(model)
     controller_dice = OlinopolyDiceController(model)
     controller_dice_animation = DiceAnimationController(model)
+    controller_mapblock_possess = MapBlockFeatureController(model)
 
     # initialize
     controller_dice_animation.randomdice_count = 1
@@ -1249,6 +1274,11 @@ if __name__ == "__main__":
                         if left < x < right:
                             if top < y < bottom:
                                 logger.debug("Clicked popup option: %d" % (i + 1))
+                                if i == 0:
+                                    controller_mapblock_possess.buyMapBlock()
+                                    model.popup_state = False
+                                elif i == 1:
+                                    model.popup_state = False
                                 break
             else:
                 if event.type == USEREVENT + 1:
@@ -1292,6 +1322,12 @@ if __name__ == "__main__":
                                     target_pos = model.markers[team][player].block_pos + model.dice_number
                                 result = model.moveMarker(
                                     team, player, target_pos, True
+                                )
+                                model.mapblockPopup(
+                                    model.current_land_block,
+                                    model.current_land_block.type,
+                                    model.current_land_block.team,
+                                    model.current_land_block.num
                                 )
                                 break
                         if result:
