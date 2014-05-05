@@ -776,6 +776,40 @@ class DiceImage(Drawable):
                 (int(self.rect[2]), int(self.rect[3]))
             )
 
+
+###############
+# Mapblock Features
+###############
+class BlockFeat(object):
+    def __init__(self, mapblocks, money):
+        self.mapblocks = mapblocks
+        self.money = money
+
+class LocationBlockFeat(BlockFeat):
+    def __init__(self, mapblocks, money):
+        super(LocationBlockFeat, self).__init__(mapblocks, money)
+
+    def buyBlock(self):
+        pass
+
+    def payBlock(self):
+        pass
+
+class CourseBlockFeat(BlockFeat):
+    def __init__(self, mapblocks, money):
+        super(CourseBlockFeat, self).__init__(mapblocks, money)
+
+    def buyBlock(self):
+        pass
+
+    def payBlock(self):
+        pass
+
+class EventBlockFeat(BlockFeat):
+    def __init__(self, mapblocks, money):
+        super(EventBlockFeat, self).__init__(mapblocks, money)
+
+
 ############################################################################
 # View Classes
 ############################################################################
