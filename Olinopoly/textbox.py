@@ -18,7 +18,7 @@ class ChatBox():
 
         self.font_size = 16
         self.font = pygame.font.SysFont('Arial', self.font_size)
-        self.max_lines = 11
+        self.max_lines = 10
         self.str_list = []
         self.color = (0, 0, 0)
 
