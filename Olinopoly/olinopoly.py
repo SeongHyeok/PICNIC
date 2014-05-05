@@ -222,6 +222,12 @@ g_text_box_rect = (
     g_map_block_height * 0.5
 )
 
+#Owned mapblock Area
+g_owned_mapblock_size = (
+    g_map_block_width*0.3,
+    g_map_block_height*0.25
+)
+
 
 # Mapblocks and money
 
@@ -290,6 +296,12 @@ class OlinopolyModel:
 
         self.current_land_block = None
 
+
+        self.bought_block = None
+        self.possess_team = None
+        self.owned_blocks = []
+
+        self.updateOwnedMapblocks()
         # Popup dialog
         self.popup_state = False
         self.popup_option_area = []
@@ -455,11 +467,8 @@ class OlinopolyModel:
         )
 
         ###############################
-        #self.mapblockPopup(
-         #   self.current_land_block,
-          #  self.current_land_block.type,
-           # self.current_land_block.team
-        #)
+
+
 
 
     def setState(self, target_state):
@@ -789,6 +798,49 @@ class OlinopolyModel:
 
         self.popup_team = self.current_team_number
 
+
+    def updateOwnedMapblocks(self):
+        for i in range(g_max_team_num):
+            if self.bought_block == None:
+                pass
+            else:
+                if self.bought_block.num <= g_map_num_blocks_in_line - 1:
+                    rect = (
+                        self.bought_block.rect[0],
+                        self.bought_block.rect[1] - g_map_block_height * 0.25,
+                        g_map_block_width * 0.3,
+                        g_map_block_height * 0.25
+                    )
+                elif g_map_num_blocks_in_line -1 < self.bought_block.num <= (g_map_num_blocks_in_line-1) * 2:
+                    rect = (
+                        self.bought_block.rect[0] + g_map_block_height,
+                        self.bought_block.rect[1],
+                        g_map_block_height * 0.25,
+                        g_map_block_width * 0.3
+                    )
+                elif (g_map_num_blocks_in_line-1) * 2 <self.bought_block.num <= (g_map_num_blocks_in_line - 1) * 3:
+                    rect = (
+                        self.bought_block.rect[0],
+                        self.bought_block.rect[1] + g_map_block_height,
+                        g_map_block_width * 0.3,
+                        g_map_block_height * 0.25
+                    )
+                elif (g_map_num_blocks_in_line - 1) * 3 < self.bought_block.num:
+                    rect = (
+                        self.bought_block.rect[0] - g_map_block_height * 0.25,
+                        self.bought_block.rect[1],
+                        g_map_block_height * 0.25,
+                        g_map_block_width * 0.3
+                    )
+                owns_mapblock = OwnsMapblock(
+                    rect,
+                    'c',
+                    True,
+                    self.possess_team,
+                    self.bought_block
+                )
+                self.owned_blocks.append(owns_mapblock)
+
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
         self.rect = rect    # rect is (x, y, width, height)
@@ -954,6 +1006,40 @@ class DiceImage(Drawable):
             self.img = pygame.transform.scale(
                 pygame.image.load(os.path.join(g_dice_dir_path, "%d.gif" % (dice_num))),
                 (int(self.rect[2]), int(self.rect[3]))
+            )
+
+class OwnsMapblock(Drawable):
+    def __init__(self, rect, c_or_i, is_visible, team, bought_map_block):
+        super(OwnsMapblock, self).__init__(rect, c_or_i, is_visible)
+        self.team = team
+        self.bought_map_block = bought_map_block
+        if self.bought_map_block.num <= g_map_num_blocks_in_line - 1:
+            self.rect = (
+                    self.bought_map_block.rect[0],
+                    self.bought_map_block.rect[1] - g_map_block_height * 0.25,
+                    g_map_block_width * 0.3,
+                    g_map_block_height * 0.25
+            )
+        elif g_map_num_blocks_in_line -1 < self.bought_map_block.num <= (g_map_num_blocks_in_line-1) * 2:
+            self.rect = (
+                self.bought_map_block.rect[0] + g_map_block_height,
+                self.bought_map_block.rect[1],
+                g_map_block_height * 0.25,
+                g_map_block_width * 0.3
+            )
+        elif (g_map_num_blocks_in_line-1) * 2 <self.bought_map_block.num <= (g_map_num_blocks_in_line - 1) * 3:
+            self.rect = (
+                self.bought_map_block.rect[0],
+                self.bought_map_block.rect[1] + g_map_block_height,
+                g_map_block_width * 0.3,
+                g_map_block_height * 0.25
+            )
+        elif (g_map_num_blocks_in_line - 1) * 3 < self.bought_map_block.num:
+            self.rect = (
+                self.bought_map_block.rect[0] - g_map_block_height * 0.25,
+                self.bought_map_block.rect[1],
+                g_map_block_height * 0.25,
+                g_map_block_width * 0.3
             )
 
 
@@ -1166,6 +1252,25 @@ class OlinopolyView:
             (self.model.rolling_dice.rect[0], self.model.rolling_dice.rect[1])
         )
 
+        # Owned Mapblock
+        for i in range(len(self.model.owned_blocks)):
+            if self.model.owned_blocks[i].team == 0:
+                fill_color = pygame.Color(250, 246, 2)
+            elif self.model.owned_blocks[i].team == 1:
+                fill_color = pygame.Color(57, 154, 250)
+            elif self.model.owned_blocks[i].team == 2:
+                fill_color = pygame.Color(250, 153, 57)
+            elif self.model.owned_blocks[i].team == 3:
+                fill_color = pygame.Color(7, 224, 83)
+
+            pygame.draw.rect(
+                self.screen,
+                fill_color,
+                self.model.owned_blocks[i].rect,
+                0
+            )
+
+
         if not self.model.popup_state:
             pygame.display.flip()
 
@@ -1318,8 +1423,11 @@ class MapBlockFeatureController:
         self.model = model
 
     def buyMapBlock(self):
-        model.current_land_block.team = self.model.popup_team
-        model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
+        self.model.current_land_block.team = self.model.popup_team
+        self.model.possess_team = self.model.popup_team
+        self.model.bought_block = self.model.current_land_block
+        self.model.updateOwnedMapblocks()
+        self.model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
 
 ############################################################################
 # Main
@@ -1384,6 +1492,8 @@ if __name__ == "__main__":
                     if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                         if i == 0:
                             controller_mapblock_possess.buyMapBlock()
+
+
             else:
                 if event.type == USEREVENT + 1:
                     controller_mouse_over.check()
