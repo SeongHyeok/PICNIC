@@ -252,6 +252,14 @@ g_mapblock_return = [None, 5000, 7000, 7000, None,   # ~  4
                      16000, None, None, 15000, None, # ~ 29
                      20000, 14000, None, None, None, 20000]
 
+g_mapblock_name = ["Start/End", "West Hall", "OIE", "Design Nature", "Study Break",
+                   "Parcel B", "TIPS", "Chance", "SIBB", "Room Draw",
+                   "Spring Formal", "UOCD", "Academic Center", "Chance", "Olin Van",
+                   "Exchange Student", "Library", "Honor Code", "SERV", "Man Hall",
+                   "East Hall", "Chance", "Dining Hall", "POE", "Career Fair",
+                   "Parking lot B", "Ninja Hours", "Study Break", "LPB", "Chance",
+                   "SCOPE", "The O", "Internship", "Graduation", "SERV donation", "Software Design"]
+
 # Game data
 g_max_team_num = 4
 g_max_marker_on_one_map_block = 3
@@ -1585,7 +1593,10 @@ if __name__ == "__main__":
                         if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                             if i == 0:
                                 controller_mapblock_possess.buyMapBlock()
-                                model.add_system_msg("%s bought block %d" % (model.get_player_name(model.popup_team), model.current_land_block.num))
+                                model.add_system_msg("%s bought '%s'" % (
+                                    model.get_player_name(model.popup_team),
+                                    g_mapblock_name[model.current_land_block.num])
+                                )
 
                         elif model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
                             if model.current_land_block.num == 15:  # Study Abroad - Exchange student
