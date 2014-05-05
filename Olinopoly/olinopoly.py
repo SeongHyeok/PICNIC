@@ -1051,7 +1051,7 @@ class OlinopolyView:
                 True,
                 (10, 10, 115)
             )
-            self.screen.blit(sentence, (self.model.chat_box.rect[0] + 5, self.model.chat_box.rect[1] + 5 + i * 20))
+            self.screen.blit(sentence, (self.model.chat_box.rect[0] + 5, self.model.chat_box.rect[1] + 5 + i * 24))
 
         # Text box
         pygame.draw.rect(
