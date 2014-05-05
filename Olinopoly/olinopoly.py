@@ -1562,8 +1562,11 @@ if __name__ == "__main__":
                         if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                             if i == 0:
                                 controller_mapblock_possess.buyMapBlock()
-                                model.add_system_msg("%s bought block %d" % (model.get_current_player_name(), model.current_land_block.num))
-                                #need to fix this!!!!!!! - current player does not match popup player
+                                if model.current_team_number != model.popup_team:
+                                    model.current_team_number = model.popup_team
+                                    model.add_system_msg("%s bought block %d" % (model.get_current_player_name(), model.current_land_block.num))
+                                    model.changeToNextTeam()
+
 
             else:
                 if event.type == USEREVENT + 1:
