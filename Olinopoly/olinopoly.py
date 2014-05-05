@@ -246,6 +246,8 @@ class OlinopolyModel:
 
         self.possess_team = None
 
+        self.current_land_block = None
+
         # Popup dialog
         self.popup_state = False
         self.popup_option_area = []
@@ -395,8 +397,8 @@ class OlinopolyModel:
             g_dice_image_rect, 'i', True, self.dice_number
         )
 
-       # for i in range(4):
-        #    self.mapblockPopup(self.map_blocks[i].type)
+        ###############################
+        self.mapblockPopup(self.current_land_block.type)
 
 
     def setState(self, target_state):
@@ -618,11 +620,10 @@ class OlinopolyModel:
         if current_marker_pos_type == 0 or 1:
             self.popup_state = True
             self.popup_options = [
-            "Yes",
-            "No",
-        ]
-        self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
-
+                "Yes",
+                "No",
+            ]
+            self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
 
 
 
@@ -1112,7 +1113,6 @@ class DiceAnimationController:
         elif self.randomdice_count == 1: # 1 : stop animation and show real dice num
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
-
 
 ############################################################################
 # Main
