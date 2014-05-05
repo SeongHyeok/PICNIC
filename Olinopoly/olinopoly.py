@@ -87,24 +87,7 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width - g_map_block_width, 0)
 ]
 g_map_enable_softdsg_blinking = True
-<<<<<<< HEAD
 
-=======
-g_mapblock_price = [None, 10000, 10000, 10000, None,
-                    15000, None, None, None, None,
-                    None, 15000, 23000, None, None,
-                    None, 21000, None, None, None,
-                    25000, None, 18000, 20000, None,
-                    28000, None, None, 30000, None,
-                    25000, 28000, None, None, None, 30000]
-g_mapblock_return = [None, 5000, 7000, 7000, None,
-                     10000, None, None, None, None,
-                     None, 10000, 18000, None, None,
-                     None, 8000, None, None, None,
-                     15000, None, 13000, 15000, None,
-                     16000, None, None, 15000, None,
-                     20000, 14000, None, None, None, 20000]
->>>>>>> 2e2772881d345b817ddbdccdb469eb72533f80c3
 # Button
 g_button_roll_dice_rect = (
     g_screen_board_width * 0.6,
@@ -234,6 +217,21 @@ g_location_buy_dict = {1:10000, 5:15000, 12:23000, 16:21000, 20:25000, 22:18000,
 g_location_pay_dict = {1:5000, 5:10000, 12:18000, 16:8000, 20:15000, 22:13000, 25:16000, 28:15000, 31:14000}
 g_course_buy_dict = {2:10000,3:10000,11:15000,23:20000, 30:25000, 35:30000}
 g_course_pay_dict = {2:7000, 3:7000, 11:10000, 23:15000, 30:20000, 35:20000}
+
+g_mapblock_price = [None, 10000, 10000, 10000, None,
+                    15000, None, None, None, None,
+                    None, 15000, 23000, None, None,
+                    None, 21000, None, None, None,
+                    25000, None, 18000, 20000, None,
+                    28000, None, None, 30000, None,
+                    25000, 28000, None, None, None, 30000]
+g_mapblock_return = [None, 5000, 7000, 7000, None,
+                     10000, None, None, None, None,
+                     None, 10000, 18000, None, None,
+                     None, 8000, None, None, None,
+                     15000, None, 13000, 15000, None,
+                     16000, None, None, 15000, None,
+                     20000, 14000, None, None, None, 20000]
 
 # Game data
 g_max_team_num = 4
