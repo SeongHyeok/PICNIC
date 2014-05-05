@@ -332,6 +332,8 @@ class OlinopolyModel:
         self.popup_team = None  # team which made popup
         self.popup_player = None    # player which made popup
 
+        self.winner = None
+
         # Set initial player data
         self.player_data = []
         for i in range(self.num_of_teams):
@@ -562,7 +564,7 @@ class OlinopolyModel:
                 h = g_map_block_height
             else:
                 x = g_complete_area_rect[0] + g_map_block_width * current_len
-                y = g_complete_area_rect[1] + g_complete_area_rect[4] / 2
+                y = g_complete_area_rect[1] + g_complete_area_rect[3] / 2
                 w = g_complete_area_marker_width
                 h = g_map_block_height
             self.markers[team][player].rect = (x, y, w, h)
@@ -651,10 +653,24 @@ class OlinopolyModel:
                     self.moveMarker(t, p, target_pos)
                 #self.map_blocks.sort()
 
+        self.check_winner()
+
         logger.debug("moveMarker() Leave")
         logger.debug("#########################")
 
         return True
+
+    def check_winner(self):
+        for i in range(self.num_of_teams):
+            chk = True
+            for j in range(4):
+                if self.markers[i][j].block_pos != -1:
+                    chk = False
+                    break
+            if chk:
+                self.winner = i
+                self.add_system_msg("%s is winner!!" % (self.get_player_name(i)))
+                break
 
     def blinkSoftDsg(self):
         if g_map_enable_softdsg_blinking:
@@ -1568,153 +1584,154 @@ if __name__ == "__main__":
             model.add_system_msg("%s is missing a turn." % (model.get_current_player_name()))
             model.changeToNextTeam()
 
-        for event in pygame.event.get():
-            if event.type == QUIT:
-                running = False
-                break
+        if not model.winner:
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    running = False
+                    break
 
-            if model.popup_state:
-                if event.type == MOUSEBUTTONUP:
-                    x, y = pygame.mouse.get_pos()
-                    logger.debug("Click when popup - x: %d / y: %d" % (x, y))
+                if model.popup_state:
+                    if event.type == MOUSEBUTTONUP:
+                        x, y = pygame.mouse.get_pos()
+                        logger.debug("Click when popup - x: %d / y: %d" % (x, y))
 
-                    option_clicked = False
-                    for i in range(len(model.popup_options)):
-                        left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
-                        right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
-                        top = g_popup_screen_rect[1] + model.popup_option_area[i][1]
-                        bottom = g_popup_screen_rect[1] + model.popup_option_area[i][1] + model.popup_option_area[i][3]
-                        if left < x < right:
-                            if top < y < bottom:
-                                logger.debug("Clicked popup option: %d" % (i))
-                                model.popup_state = False
-                                option_clicked = True
-                                break
-                    if option_clicked:
-                        # Check clicked option from popup and do something
-                        logger.debug("popup block info- num:%d, type:%d" % (model.current_land_block.num, model.current_land_block.type))
-
-                        if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
-                            if i == 0:
-                                controller_mapblock_possess.buyMapBlock()
-                                model.add_system_msg("%s bought '%s'" % (
-                                    model.get_player_name(model.popup_team),
-                                    g_mapblock_name[model.current_land_block.num])
-                                )
-
-                        elif model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
-                            if model.current_land_block.num == 15:  # Study Abroad - Exchange student
-                                if i == 0: # Belguim
-                                    study_abroad_num = random.randint(1, 3)
-                                elif i == 1: # Korea
-                                    study_abroad_num = random.randint(3, 6)
-                                elif i == 2: # France
-                                    study_abroad_num = random.randint(2, 4)
-                                elif i == 3: # Singapore
-                                    study_abroad_num = random.randint(1, 5)
-                                logger.debug("Study abroad num: %d" % (study_abroad_num))
-                                t = model.popup_team
-                                p = model.popup_player
-                                target = model.markers[t][p].block_pos + study_abroad_num
-                                logger.debug("Move marker %d, %d to %d" % (t, p, target))
-                                model.moveMarker(t, p, target, True)
-
-                        elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
-                            if i == 0:
-                                controller_mapblock_possess.drawChanceCard()
-
-
-            else:
-                if event.type == USEREVENT + 1:
-                    controller_mouse_over.check()
-
-                if event.type == USEREVENT + 2:
-                    model.blinkSoftDsg()
-
-                if event.type == USEREVENT + 3:
-                    controller_dice_animation.randomDice()
-
-                # Keyboard input --> Text box
-                if event.type == pygame.KEYDOWN:
-                    r = model.text_box.add_char(event)
-                    if r:
-                        logger.debug("char_add result: %s", r)
-                        model.chat_box.add_sentence("[%s] %s" % (model.get_current_player_name(), r))
-                        model.text_box.str_list = []
-                    model.text_box.update()
-
-                if event.type == MOUSEMOTION:
-                    controller_mouse.handleMouseEvent(event)
-
-                if event.type == MOUSEBUTTONUP:
-                    x, y = pygame.mouse.get_pos()
-                    if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
-                        controller_dice.rollDice()
-                        controller_dice_animation.randomdice_count = 0
-                        controller_dice_animation.random_state = 0
-                        logger.debug("role_dice_only: %s" % (model.role_dice_only))
-                        if model.role_dice_only:
+                        option_clicked = False
+                        for i in range(len(model.popup_options)):
+                            left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
+                            right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
+                            top = g_popup_screen_rect[1] + model.popup_option_area[i][1]
+                            bottom = g_popup_screen_rect[1] + model.popup_option_area[i][1] + model.popup_option_area[i][3]
+                            if left < x < right:
+                                if top < y < bottom:
+                                    logger.debug("Clicked popup option: %d" % (i))
+                                    model.popup_state = False
+                                    option_clicked = True
+                                    break
+                        if option_clicked:
+                            # Check clicked option from popup and do something
                             logger.debug("popup block info- num:%d, type:%d" % (model.current_land_block.num, model.current_land_block.type))
-                            model.role_dice_only = False
-                            if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
-                                if model.current_land_block.num == 9:
-                                    logger.debug("it was roomdraw.")
-                                    plus = model.dice_number * 5000
-                                    model.player_data[model.current_team_number].money += plus
-                                    model.add_system_msg("%s earned money, %d." %(model.get_current_player_name(), plus))
-                                    model.changeToNextTeam()
-                        else:
-                            model.setState(2)
-                            logger.debug("Set state 2")
-                    elif model.current_state == 2 and controller_dice_animation.randomdice_count == 1:
-                        result = False
-                        for player in model.markers[model.my_team_number]:
-                            if player.pressed(x, y) and player.block_pos != -1:
-                                team = player.team
-                                player = player.player
-                                logger.debug("Dice Num: %d" % (model.dice_number))
-                                if model.markers[team][player].block_pos == None:
-                                    target_pos = model.dice_number
-                                else:
-                                    target_pos = model.markers[team][player].block_pos + model.dice_number
 
-                                result = model.moveMarker(
-                                    team, player, target_pos, True
-                                )
-
-                                if model.current_land_block:    # if land block is map block (it it sen in moveMarker())
-                                    logger.debug("current_land_block- num:%s team:%s" % (
-                                        str(model.current_land_block.num), str(model.current_land_block.team)
-                                    ))
-                                    # Enable map block switch
-                                    n = model.current_land_block
-                                    if n in g_tips_position:
-                                        model.player_data[team].is_tips = True
-                                        logger.debug("is_tips is ON")
-                                    if n in g_sibb_position:
-                                        model.player_data[team].is_sibb = True
-                                        logger.debug("is_sibb is ON")
-                                    if n in g_career_fair_position:
-                                        model.player_data[team].is_career_fair = True
-                                        logger.debug("is_career_fair is ON")
-                                    model.mapblockPopup(
-                                        model.current_land_block,
-                                        model.current_land_block.type,
-                                        model.current_land_block.team,
-                                        model.current_land_block.num,
-                                        player
+                            if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
+                                if i == 0:
+                                    controller_mapblock_possess.buyMapBlock()
+                                    model.add_system_msg("%s bought '%s'" % (
+                                        model.get_player_name(model.popup_team),
+                                        g_mapblock_name[model.current_land_block.num])
                                     )
-                                    if n in g_study_abroad_position:
-                                        model.moveMarker(team, player, model.current_land_block.num)
 
-                                break
-                        if result:
-                            model.setState(1)
-                            if model.player_data[model.current_team_number].is_one_more:
-                                model.player_data[model.current_team_number].is_one_more = False
+                            elif model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
+                                if model.current_land_block.num == 15:  # Study Abroad - Exchange student
+                                    if i == 0: # Belguim
+                                        study_abroad_num = random.randint(1, 3)
+                                    elif i == 1: # Korea
+                                        study_abroad_num = random.randint(3, 6)
+                                    elif i == 2: # France
+                                        study_abroad_num = random.randint(2, 4)
+                                    elif i == 3: # Singapore
+                                        study_abroad_num = random.randint(1, 5)
+                                    logger.debug("Study abroad num: %d" % (study_abroad_num))
+                                    t = model.popup_team
+                                    p = model.popup_player
+                                    target = model.markers[t][p].block_pos + study_abroad_num
+                                    logger.debug("Move marker %d, %d to %d" % (t, p, target))
+                                    model.moveMarker(t, p, target, True)
+
+                            elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
+                                if i == 0:
+                                    controller_mapblock_possess.drawChanceCard()
+
+
+                else:
+                    if event.type == USEREVENT + 1:
+                        controller_mouse_over.check()
+
+                    if event.type == USEREVENT + 2:
+                        model.blinkSoftDsg()
+
+                    if event.type == USEREVENT + 3:
+                        controller_dice_animation.randomDice()
+
+                    # Keyboard input --> Text box
+                    if event.type == pygame.KEYDOWN:
+                        r = model.text_box.add_char(event)
+                        if r:
+                            logger.debug("char_add result: %s", r)
+                            model.chat_box.add_sentence("[%s] %s" % (model.get_current_player_name(), r))
+                            model.text_box.str_list = []
+                        model.text_box.update()
+
+                    if event.type == MOUSEMOTION:
+                        controller_mouse.handleMouseEvent(event)
+
+                    if event.type == MOUSEBUTTONUP:
+                        x, y = pygame.mouse.get_pos()
+                        if model.current_state == 1 and model.button_roll_dice.pressed((x, y)):
+                            controller_dice.rollDice()
+                            controller_dice_animation.randomdice_count = 0
+                            controller_dice_animation.random_state = 0
+                            logger.debug("role_dice_only: %s" % (model.role_dice_only))
+                            if model.role_dice_only:
+                                logger.debug("popup block info- num:%d, type:%d" % (model.current_land_block.num, model.current_land_block.type))
+                                model.role_dice_only = False
+                                if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
+                                    if model.current_land_block.num == 9:
+                                        logger.debug("it was roomdraw.")
+                                        plus = model.dice_number * 5000
+                                        model.player_data[model.current_team_number].money += plus
+                                        model.add_system_msg("%s earned money, %d." %(model.get_current_player_name(), plus))
+                                        model.changeToNextTeam()
                             else:
-                                # Change to next team
-                                model.changeToNextTeam()
+                                model.setState(2)
+                                logger.debug("Set state 2")
+                        elif model.current_state == 2 and controller_dice_animation.randomdice_count == 1:
+                            result = False
+                            for player in model.markers[model.my_team_number]:
+                                if player.pressed(x, y) and player.block_pos != -1:
+                                    team = player.team
+                                    player = player.player
+                                    logger.debug("Dice Num: %d" % (model.dice_number))
+                                    if model.markers[team][player].block_pos == None:
+                                        target_pos = model.dice_number
+                                    else:
+                                        target_pos = model.markers[team][player].block_pos + model.dice_number
+
+                                    result = model.moveMarker(
+                                        team, player, target_pos, True
+                                    )
+
+                                    if model.current_land_block:    # if land block is map block (it it sen in moveMarker())
+                                        logger.debug("current_land_block- num:%s team:%s" % (
+                                            str(model.current_land_block.num), str(model.current_land_block.team)
+                                        ))
+                                        # Enable map block switch
+                                        n = model.current_land_block
+                                        if n in g_tips_position:
+                                            model.player_data[team].is_tips = True
+                                            logger.debug("is_tips is ON")
+                                        if n in g_sibb_position:
+                                            model.player_data[team].is_sibb = True
+                                            logger.debug("is_sibb is ON")
+                                        if n in g_career_fair_position:
+                                            model.player_data[team].is_career_fair = True
+                                            logger.debug("is_career_fair is ON")
+                                        model.mapblockPopup(
+                                            model.current_land_block,
+                                            model.current_land_block.type,
+                                            model.current_land_block.team,
+                                            model.current_land_block.num,
+                                            player
+                                        )
+                                        if n in g_study_abroad_position:
+                                            model.moveMarker(team, player, model.current_land_block.num)
+
+                                    break
+                            if result:
+                                model.setState(1)
+                                if model.player_data[model.current_team_number].is_one_more:
+                                    model.player_data[model.current_team_number].is_one_more = False
+                                else:
+                                    # Change to next team
+                                    model.changeToNextTeam()
 
         view.draw()
         if model.popup_state:
