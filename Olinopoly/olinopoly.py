@@ -561,9 +561,10 @@ class OlinopolyModel:
                     for marker in map_block.markers_on_block:
                         markers.append(marker)
 
-                    c = 's are' if len(markers) > 1 else ' is'
-                    self.add_system_msg("%s's marker%s caught by %s's." % (
-                        self.get_player_name(markers[0][0]), c, self.get_current_player_name()))
+                    c = 's' if len(markers) > 1 else ''
+                    self.add_system_msg("%s caught %s's marker%s." % (
+                        self.get_current_player_name(), self.get_player_name(markers[0][0]), c)
+                    )
 
                     for marker in markers:
                         t, p = marker
@@ -724,6 +725,14 @@ class OlinopolyModel:
                 self.popup_questions = ["Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])]
             else:
                 self.popup_state = False
+                if current_pos_team != self.current_team_number:
+                    # pay money
+                    self.player_data[current_pos_team].money += g_mapblock_price[current_pos_num]
+                    self.player_data[self.current_team_number].money -= g_mapblock_price[current_pos_num]
+                    self.add_system_msg("%s paid %s, %d" % (
+                            self.get_current_player_name(), self.get_player_name(current_pos_team), g_mapblock_price[current_pos_num]
+                        )
+                    )
         elif current_pos_type == MAPBLOCK_TYPE_EVENT:
             if current_pos_num == 4:
                 self.popup_options = ["Close"]
