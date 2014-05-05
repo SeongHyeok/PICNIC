@@ -194,6 +194,13 @@ g_dice_image_rect = (
     g_screen_board_height * 0.2,
 )
 
+
+# Mapblocks and money
+g_location_buy_dict = {1:10000, 5:15000, 12:23000, 16:21000, 20:25000, 22:18000, 25:28000, 28:30000, 31:28000}
+g_location_pay_dict = {1:5000, 5:10000, 12:18000, 16:8000, 20:15000, 22:13000, 25:16000, 28:15000, 31:14000}
+g_course_buy_dict = {2:10000,3:10000,11:15000,23:20000, 30:25000, 35:30000}
+g_course_pay_dict = {2:7000, 3:7000, 11:10000, 23:15000, 30:20000, 35:20000}
+
 # Game data
 g_max_team_num = 4
 g_max_marker_on_one_map_block = 3
@@ -378,6 +385,12 @@ class OlinopolyModel:
         self.rolling_dice = DiceImage(
             g_dice_image_rect, 'i', True, self.dice_number
         )
+
+        ##############################
+        # Create Block Features
+
+        self.location = LocationBlockFeat(g_location_buy_dict, g_location_pay_dict)
+        self.course = CourseBlockFeat(g_course_buy_dict, g_location_pay_dict)
 
 
     def setState(self, target_state):
@@ -595,6 +608,11 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
+    ###############################################
+    # Implement Mapblock Features
+    ###############################################
+
+
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -698,25 +716,6 @@ class GameDescrip(Drawable):
             text.close()
             self.txt_list.append(txt)
 
-#    def render_text_rect(self, msg, txt_font, txt_color, background_color):
-#        for info_list in self.txt_list:
-#            for lines in info_list:
-#                if txt_font.size(lines)[0] > self.rect[2]:
-#                    split_words = lines.split(' ')
-#                    accum_line = " "
-#                    for word in split_words:
-#                        if txt_font.size(word)[0] < self.rect[2]:
-#                            new_line = accum_line + word + " "
-#                            if txt_font.size(new_line)[0] < self.rect[2]:
-#                                accum_line = new_line
-#                            else:
-#                                self.txt_list.append(accum_line)
-#                                accum_line = word + " "
-#                            self.txt_list.append(accum_line)
-#                        self.txt_list.append(accum_line)
-#                    else:
-#                        self.txt_list.append(accum_line)
-
 class PlaceDescrip(Drawable):
     def __init__(self, rect, c_or_i, is_visible):
         super(PlaceDescrip, self).__init__(rect, c_or_i, is_visible)
@@ -781,21 +780,21 @@ class DiceImage(Drawable):
 # Mapblock Features
 ###############
 class BlockFeat(object):
-    def __init__(self, mapblocks, money):
-        self.mapblocks = mapblocks
-        self.money = money
+    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
+        self.mapblock_pay_dict = mapblock_pay_dict
+        self.mapblock_buy_dict = mapblock_buy_dict
 
 class LocationBlockFeat(BlockFeat):
-    def __init__(self, mapblocks, money):
-        super(LocationBlockFeat, self).__init__(mapblocks, money)
+    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
+        super(LocationBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
 
 class CourseBlockFeat(BlockFeat):
-    def __init__(self, mapblocks, money):
-        super(CourseBlockFeat, self).__init__(mapblocks, money)
+    def __init__(self, mapblock_buy_dict, mapblock_pay_dict):
+        super(CourseBlockFeat, self).__init__(mapblock_buy_dict, mapblock_pay_dict)
 
-class EventBlockFeat(BlockFeat):
-    def __init__(self, mapblocks, money):
-        super(EventBlockFeat, self).__init__(mapblocks, money)
+class EventBlockFeat:
+    def __init__(self):
+        pass
 
 
 ############################################################################
