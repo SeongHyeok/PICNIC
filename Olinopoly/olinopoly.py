@@ -251,13 +251,13 @@ g_mapblock_return = [None, 5000, 7000, 7000, None,   # ~  4
                      15000, None, 13000, 15000, None,# ~ 24
                      16000, None, None, 15000, None, # ~ 29
                      20000, 14000, None, None, None, 20000]
-g_mapblock_name = [Start/End, West Hall, OIE, Design Nature, Study Break,
-                   Parcel B, TIPS, Chance, SIBB, Room Draw,
-                   Spring Formal, UOCD, Academic Center, Chance, Olin Van,
-                   Exchange Student, Library, Honor Code, SERV, Man Hall,
-                   East Hall, Chance, Dining Hall, POE, Career Fair,
-                   Parking lot B, Ninja Hours, Study Break, LPB, Chance,
-                   SCOPE, The O, Internship, Graduation, SERV donation, Software Design]
+g_mapblock_name = ["Start/End", "West Hall", "OIE", "Design Nature", "Study Break",
+                   "Parcel B", "TIPS", "Chance", "SIBB", "Room Draw",
+                   "Spring Formal", "UOCD", "Academic Center", "Chance", "Olin Van",
+                   "Exchange Student", "Library", "Honor Code", "SERV", "Man Hall",
+                   "East Hall", "Chance", "Dining Hall", "POE", "Career Fair",
+                   "Parking lot B", "Ninja Hours", "Study Break", "LPB", "Chance",
+                   "SCOPE", "The O", "Internship", "Graduation", "SERV donation", "Software Design"]
 
 # Game data
 g_max_team_num = 4
