@@ -700,7 +700,7 @@ class OlinopolyModel:
                     "Yes",
                     "No",
                 ]
-                self.popup_question = "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
+                self.popup_questions = ["Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])]
         self.popup_state = True
         if current_pos_type == 2:
             if current_pos_num == 4:
@@ -748,6 +748,40 @@ class OlinopolyModel:
             #elif current_pos_num == 19:
              # if landed on tips: has to pay but can party(roll dice one more time)
              #if did not land on tips: has to pay but cannot party
+            elif current_pos_num == 24:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "You can now get a better internship"
+                ]
+            elif current_pos_num == 26:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "You miss a turn.",
+                    "Go to NINJA hours."
+                ]
+            elif current_pos_num == 27:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "It's spring break!",
+                    "Go enjoy your break for 2 turns."
+                ]
+            elif current_pos_num == 32:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "You got an internship!",
+                    "Go do work for a turn and earn money."
+                ]
+            #elif current_pos_num == 33:
+             #   if not senior
+                #self.popup_options = ["Pay Senior"]
+                #self.popup_questions = ["Give a present to the seniors"]
+            #   if senior
+                #self.popup_options = ["Graduate"]
+                #self.popup_quesitons = ["Congratulations!", "You now have earned your bachelor's degree!"]
+            elif current_pos_num == 34:
+                self.popup_options = ["Donate"]
+                self.popup_questions = ["Donate to SERV!"]
+
         elif current_pos_type == 3:
             self.popup_options = ["Draw Chance Card"]
             self.popup_questions = ["Chance Card!"]
