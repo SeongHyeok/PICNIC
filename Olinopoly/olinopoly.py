@@ -34,11 +34,15 @@ import textbox
 # Debug options
 ############################################################################
 
-g_debug_dice = False
+g_debug_dice = True
 
 ############################################################################
 # Global variabless
 ############################################################################
+MAPBLOCK_TYPE_LOCATION = 0
+MAPBLOCK_TYPE_COURSE = 1
+MAPBLOCK_TYPE_EVENT = 2
+MAPBLOCK_TYPE_CHANCE = 3
 # Path
 g_image_dir_path = os.path.join(os.curdir, "img")
 g_map_block_dir_path = os.path.join(g_image_dir_path, "map")
@@ -295,6 +299,7 @@ class OlinopolyModel:
             "Option 4"
         ]
         self.popup_question = "Q: "
+        self.popup_team = None  # team which made popup
 
         # Set initial player data
         self.player_data = []
@@ -341,13 +346,13 @@ class OlinopolyModel:
 
         for i in range(0, len(self.map_blocks)):
             if (i in g_location_position) or (i in g_softdsg_card_position):
-                self.map_blocks[i].type = 0 # 0 = location
+                self.map_blocks[i].type = MAPBLOCK_TYPE_LOCATION
             elif i in g_course_position:
-                self.map_blocks[i].type = 1 # 1 = course
+                self.map_blocks[i].type = MAPBLOCK_TYPE_COURSE
             elif i in g_event_position:
-                self.map_blocks[i].type = 2 # 2 = event
+                self.map_blocks[i].type = MAPBLOCK_TYPE_EVENT
             elif i in g_chance_card_position:
-                self.map_blocks[i].type = 3 # 3 = chance
+                self.map_blocks[i].type = MAPBLOCK_TYPE_CHANCE
             logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
                 i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
             )
@@ -677,12 +682,13 @@ class OlinopolyModel:
                     "Yes",
                     "No",
                 ]
-                self.popup_question = "Q: Would you like to buy"# for %d ?" % (g_mapblock_price[current_pos_num])
+                self.popup_question = "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
         elif current_pos_type == 2:
             pass
         elif current_pos_type == 3:
             pass
 
+        self.popup_team = self.current_team_number
 
 class Drawable(object):
     def __init__(self, rect, c_or_i, is_visible):
@@ -1203,7 +1209,8 @@ class MapBlockFeatureController:
         self.model = model
 
     def buyMapBlock(self):
-        model.current_land_block.team = model.current_team_number
+        model.current_land_block.team = self.model.popup_team
+        model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
 
 ############################################################################
 # Main
@@ -1260,12 +1267,15 @@ if __name__ == "__main__":
                         if left < x < right:
                             if top < y < bottom:
                                 logger.debug("Clicked popup option: %d" % (i + 1))
-                                if i == 0:
-                                    controller_mapblock_possess()
-                                    model.popup_state = False
-                                elif i == 1:
-                                    model.popup_state = False
+                                model.popup_state = False
                                 break
+                    if i == 0:
+                        if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
+                            print "Current team number is: %d" % (model.current_team_number)
+                            controller_mapblock_possess.buyMapBlock()
+                        elif i == 1:
+                            if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
+                                pass
             else:
                 if event.type == USEREVENT + 1:
                     controller_mouse_over.check()
