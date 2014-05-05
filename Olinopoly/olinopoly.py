@@ -107,18 +107,18 @@ g_olin_logo_rect = (
 
 # Game Description
 g_game_des_rect = (
-    g_screen_board_width * 0.2,
+    g_screen_board_width * 0.15,
     g_screen_board_height * 0.6,
-    g_screen_board_width * 0.3,
-    g_screen_board_height * 0.2
+    g_screen_board_width * 0.35,
+    g_screen_board_height * 0.23
 )
 
 # Place Description
 g_place_des_rect = (
     g_screen_board_width * 0.5,
     g_screen_board_height * 0.6,
-    g_screen_board_width * 0.3,
-    g_screen_board_height * 0.2
+    g_screen_board_width * 0.35,
+    g_screen_board_height * 0.23
 )
 
 # Chance Card
