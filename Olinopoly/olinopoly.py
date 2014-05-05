@@ -301,7 +301,9 @@ class OlinopolyModel:
             "Option 3",
             "Option 4"
         ]
-        self.popup_question = "Q: "
+        self.popup_questions = [
+            "Q: "
+        ]
         self.popup_team = None  # team which made popup
 
         # Set initial player data
@@ -698,7 +700,11 @@ class OlinopolyModel:
                     "Yes",
                     "No",
                 ]
-                self.popup_question = "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
+                self.popup_questions = [
+                    "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num]),
+                    "Sentence 2222222222",
+                    "Sentence 3333333333333##"
+                ]
         elif current_pos_type == 2:
             pass
         elif current_pos_type == 3:
@@ -1099,13 +1105,16 @@ class OlinopolyView:
         left = g_popup_screen_rect[2] * 0.1
 
         # Display question
-        text_surface = self.font_question.render(self.model.popup_question, 1, (0, 50, 100))
-        text_rect = text_surface.get_rect()
-        text_rect.top = top
-        text_rect.left = left
-        popup_surface.blit(text_surface, text_rect)
+        for i in range(len(self.model.popup_questions)):
+            text_surface = self.font_question.render(self.model.popup_questions[i], 1, (0, 50, 100))
+            text_rect = text_surface.get_rect()
+            text_rect.top = top
+            text_rect.left = left
+            popup_surface.blit(text_surface, text_rect)
 
-        top += g_popup_screen_rect[3] * 0.2
+            top += g_popup_screen_rect[3] * 0.1
+
+        top += g_popup_screen_rect[3] * 0.15
         left = g_popup_screen_rect[2] * 0.15
 
         # Display options
