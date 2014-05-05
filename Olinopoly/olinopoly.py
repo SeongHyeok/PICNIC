@@ -305,6 +305,8 @@ class OlinopolyModel:
 
         self.dice_number = None
 
+        self.role_dice_only = False
+
         self.current_land_block = None
 
 
@@ -774,6 +776,8 @@ class OlinopolyModel:
             elif current_pos_num == 9:
                 self.popup_options = ["Roll Dice"]
                 self.popup_questions = ["Roll the dice and earn times 5000"]
+                self.player_data[self.current_team_number].is_one_more = True
+                self.role_dice_only = True
             elif current_pos_num == 10:
                 self.popup_options = ["Close"]
                 self.popup_questions = [
@@ -1648,7 +1652,20 @@ if __name__ == "__main__":
                         controller_dice.rollDice()
                         controller_dice_animation.randomdice_count = 0
                         controller_dice_animation.random_state = 0
-                        model.setState(2)
+                        logger.debug("role_dice_only: %s" % (model.role_dice_only))
+                        if model.role_dice_only:
+                            logger.debug("popup block info- num:%d, type:%d" % (model.current_land_block.num, model.current_land_block.type))
+                            model.role_dice_only = False
+                            if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
+                                if model.current_land_block.num == 9:
+                                    logger.debug("it was roomdraw.")
+                                    plus = model.dice_number * 5000
+                                    model.player_data[model.current_team_number].money += plus
+                                    model.add_system_msg("%s earned money, %d." %(model.get_current_player_name(), plus))
+                                    model.changeToNextTeam()
+                        else:
+                            model.setState(2)
+                            logger.debug("Set state 2")
                     elif model.current_state == 2 and controller_dice_animation.randomdice_count == 1:
                         result = False
                         for player in model.markers[model.my_team_number]:
