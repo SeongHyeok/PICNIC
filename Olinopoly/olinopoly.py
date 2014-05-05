@@ -1577,7 +1577,6 @@ if __name__ == "__main__":
                     logger.debug("Click when popup - x: %d / y: %d" % (x, y))
 
                     option_clicked = False
-                    chance_card_drawn = False
                     for i in range(len(model.popup_options)):
                         left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
                         right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
@@ -1586,7 +1585,8 @@ if __name__ == "__main__":
                         if left < x < right:
                             if top < y < bottom:
                                 logger.debug("Clicked popup option: %d" % (i))
-                                model.popup_state = False
+                                if model.current_land_block.type != MAPBLOCK_TYPE_CHANCE:
+                                    model.popup_state = False
                                 option_clicked = True
                                 break
                     if option_clicked:
@@ -1621,11 +1621,8 @@ if __name__ == "__main__":
                         elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
                             if i == 0:
                                 controller_mapblock_possess.drawChanceCard()
-                                chance_card_drawn = True
-                    if chance_card_drawn:
-                        if i == 0:
-                            model.popup_state = False
-                            chance_card_drawn = False
+                                #What now?
+
 
 
 
