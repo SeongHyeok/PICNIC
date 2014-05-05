@@ -132,10 +132,15 @@ g_place_des_rect = (
 g_chance_card_num = 30
 g_chance_card_position = [7, 13, 21, 29]
 
+# Card Feature
 g_location_position = [1, 5, 12, 16, 20, 22, 25, 28, 31]
 g_course_position = [2, 3, 11, 23, 30]
 g_event_position = [4, 6, 8, 9, 10, 14, 15, 17, 18, 24, 26, 27, 32, 33, 34]
 g_softdsg_card_position = [35]
+
+g_tips_position = [6]
+g_sibb_position = [8]
+g_career_fair_position = [24]
 
 # Current turn information area
 g_current_turn_area_rect = (
@@ -285,8 +290,6 @@ class OlinopolyModel:
         self.map_block_info_place = PlaceDescrip(g_place_des_rect, "c", True)
 
         self.dice_number = None
-
-        #self.possess_team = None
 
         self.current_land_block = None
 
@@ -693,20 +696,66 @@ class OlinopolyModel:
 
     def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
         print "block type is: ", current_pos_type
-        if (current_pos_type == 0) or (current_pos_type == 1):
+        if (current_pos_type == MAPBLOCK_TYPE_LOCATION) or (current_pos_type == MAPBLOCK_TYPE_COURSE):
             if current_pos_team == None:
                 self.popup_state = True
                 self.popup_options = [
                     "Yes",
                     "No",
                 ]
+                self.popup_question = "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
+        self.popup_state = True
+        if current_pos_type == MAPBLOCK_TYPE_EVENT:
+            if current_pos_num == 4:
+                self.popup_options = ["Close"]
                 self.popup_questions = [
-                    "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
-                ]
-        elif current_pos_type == 2:
-            pass
-        elif current_pos_type == 3:
-            pass
+                    "You miss a turn.",
+                    "Go take a study break!"]
+            elif current_pos_num == 6:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "Congratulations.",
+                    "You can now enter ManHall!"]
+            elif current_pos_num == 8:
+                self.popup_options = ["Close"]
+                self.popup_questions = ["Now you can piggy-back your markers."]
+            elif current_pos_num == 9:
+                self.popup_options = ["Roll Dice"]
+                self.popup_questions = ["Roll the dice and earn times 5000"]
+            elif current_pos_num == 10:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "You lose money.",
+                    "Go enjoy the spring formal."]
+            elif current_pos_num == 14:
+                self.popup_options = ["Roll Dice"]
+                self.popup_questions = ["You can roll the dice one more time."]
+            elif current_pos_num == 15:
+                self.popup_options = [
+                    "Belgium",
+                    "Korea",
+                    "France",
+                    "Singapore"]
+                self.popup_questions = ["Choose a country to study abroad"]
+            elif current_pos_num == 17:
+                self.popup_options = ["Close"]
+                self.popup_questions = [
+                    "You got caught by the Honor Board!",
+                    "You lose money."]
+            elif current_pos_num == 18:
+                self.popup_options = ["Collect Money"]
+                self.popup_questions = [
+                    "Congratulations!",
+                    "You are the winner of the SERV money"]
+            elif current_pos_num == 19:
+                self.player_data[self.current_team_number].money -= g_mapblock_price[19]
+                if self.player_data[self.current_team_number].is_sibb:
+                    self.current_team_number = self.popup_team
+                # if landed on tips: has to pay but can party(roll dice one more time)
+                # if did not land on tips: has to pay but cannot party
+        elif current_pos_type == MAPBLOCK_TYPE_CHANCE:
+            self.popup_options = ["Draw Chance Card"]
+            self.popup_questions = ["Chance Card!"]
 
         self.popup_team = self.current_team_number
 
@@ -858,6 +907,12 @@ class PlayerData:
         self.name = name
         self.money = money
         self.team = team
+
+        self.remaining_miss_turn = 0
+
+        self.is_tips = False
+        self.is_sibb = False
+        self.is_career_fair = False
 
 class DiceImage(Drawable):
     def __init__(self, rect, c_or_i, is_visible, dice_num):
@@ -1348,6 +1403,15 @@ if __name__ == "__main__":
                                 result = model.moveMarker(
                                     team, player, target_pos, True
                                 )
+                                if model.current_land_block:    # if map block
+                                    # Enable map block switch
+                                    n = model.current_land_block
+                                    if n in g_tips_position:
+                                        model.player_data[team].is_tips = True
+                                    if n in g_sibb_position:
+                                        model.player_data[team].is_sibb = True
+                                    if n in g_career_fair_position:
+                                        model.player_data[team].is_career_fair = True
                                 model.mapblockPopup(
                                     model.current_land_block,
                                     model.current_land_block.type,
