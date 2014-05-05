@@ -301,7 +301,9 @@ class OlinopolyModel:
             "Option 3",
             "Option 4"
         ]
-        self.popup_question = "Q: "
+        self.popup_questions = [
+            "Q: "
+        ]
         self.popup_team = None  # team which made popup
 
         # Set initial player data
@@ -504,7 +506,8 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
-        self.current_land_block = self.map_blocks[target_pos]
+        self.current_land_block = None
+
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         else:
@@ -589,6 +592,8 @@ class OlinopolyModel:
                 )
                 if self.markers[team][player].prev_block_pos == None:
                     self.markers[team][player].reloadImage()
+
+            self.current_land_block = self.map_blocks[target_pos]
 
         logger.debug("final target: %d" % (target_pos))
 
@@ -700,22 +705,28 @@ class OlinopolyModel:
         if current_pos_type == 2:
             if current_pos_num == 4:
                 self.popup_options = ["Close"]
-                self.popup_question = "You miss a turn. Go take a study break!"
+                self.popup_questions = [
+                    "You miss a turn.",
+                    "Go take a study break!"]
             elif current_pos_num == 6:
                 self.popup_options = ["Close"]
-                self.popup_question = "Congratulations. You can now enter ManHall!"
+                self.popup_questions = [
+                    "Congratulations.",
+                    "You can now enter ManHall!"]
             elif current_pos_num == 8:
                 self.popup_options = ["Close"]
-                self.popup_question = "Now you can piggy-back your markers."
+                self.popup_questions = ["Now you can piggy-back your markers."]
             elif current_pos_num == 9:
                 self.popup_options = ["Roll Dice"]
-                self.popup_question = "Roll the dice and earn times 5000"
+                self.popup_questions = ["Roll the dice and earn times 5000"]
             elif current_pos_num == 10:
                 self.popup_options = ["Close"]
-                self.popup_question = "You lose money. Go enjoy the spring formal."
+                self.popup_questions = [
+                    "You lose money.",
+                    "Go enjoy the spring formal."]
             elif current_pos_num == 14:
                 self.popup_options = ["Roll Dice"]
-                self.popup_question = "You can roll the dice one more time."
+                self.popup_questions = ["You can roll the dice one more time."]
             elif current_pos_num == 15:
                 self.popup_options = [
                     "Belgium",
@@ -723,16 +734,23 @@ class OlinopolyModel:
                     "France",
                     "Singapore"
                 ]
-                self.popup_question = "Choose a country to study abroad"
+                self.popup_questions = ["Choose a country to study abroad"]
             elif current_pos_num == 17:
                 self.popup_options = ["Close"]
-                self.popup_question = "You got caught by the Honor Board! You lose money."
+                self.popup_questions = [
+                    "You got caught by the Honor Board!",
+                    "You lose money."]
             elif current_pos_num == 18:
                 self.popup_options = ["Collect Money"]
-                self.popup_question = "Congratulations! You are the winner of the SERV money"
+                self.popup_questions = [
+                    "Congratulations!",
+                    "You are the winner of the SERV money"]
+            #elif current_pos_num == 19:
+             # if landed on tips: has to pay but can party(roll dice one more time)
+             #if did not land on tips: has to pay but cannot party
         elif current_pos_type == 3:
             self.popup_options = ["Draw Chance Card"]
-            self.popup_question = "Chance Card!"
+            self.popup_questions = ["Chance Card!"]
 
 
         self.popup_team = self.current_team_number
@@ -1130,13 +1148,16 @@ class OlinopolyView:
         left = g_popup_screen_rect[2] * 0.1
 
         # Display question
-        text_surface = self.font_question.render(self.model.popup_question, 1, (0, 50, 100))
-        text_rect = text_surface.get_rect()
-        text_rect.top = top
-        text_rect.left = left
-        popup_surface.blit(text_surface, text_rect)
+        for i in range(len(self.model.popup_questions)):
+            text_surface = self.font_question.render(self.model.popup_questions[i], 1, (0, 50, 100))
+            text_rect = text_surface.get_rect()
+            text_rect.top = top
+            text_rect.left = left
+            popup_surface.blit(text_surface, text_rect)
 
-        top += g_popup_screen_rect[3] * 0.2
+            top += g_popup_screen_rect[3] * 0.1
+
+        top += g_popup_screen_rect[3] * 0.15
         left = g_popup_screen_rect[2] * 0.15
 
         # Display options
@@ -1324,6 +1345,8 @@ if __name__ == "__main__":
                                 model.popup_state = False
                                 break
 
+                    # Check answer from popup and do something
+                    # [Note] Assumtion here: last option is always 'cancel' or 'ignore' which does nothing.
                     if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                         if i == 0:
                             controller_mapblock_possess.buyMapBlock()
