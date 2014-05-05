@@ -309,6 +309,7 @@ class OlinopolyModel:
 
         self.current_land_block = None
 
+        self.was_chance = False
 
         self.bought_block = None
         self.possess_team = None
@@ -1523,21 +1524,20 @@ class MapBlockFeatureController:
     def drawChanceCard(self):
         self.model.popup_state = True
         self.model.popup_options = ["Close"]
-        chance_card_num = random.randint(0,2)
+
+        chance_card_num = random.randint(0, 1)
         if chance_card_num == 0:
             self.model.popup_questions = [
-                "Congratulations!",
-                "You can roll the dice one more time."
+                "Better luck next time"
             ]
         elif chance_card_num == 1:
             self.model.popup_questions = [
                 "I'm sorry.",
                 "You miss a turn."
             ]
-        elif chance_card_num == 2:
-            self.model.popup_questions = [
-                "Better luck next time"
-            ]
+            self.model.player_data[self.model.popup_player].remaining_miss_turn = 1
+
+        self.model.was_chance = True
 
 ############################################################################
 # Main
@@ -1637,7 +1637,11 @@ if __name__ == "__main__":
 
                             elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
                                 if i == 0:
-                                    controller_mapblock_possess.drawChanceCard()
+                                    if model.was_chance:
+                                        model.popup_state = False
+                                        model.was_chance = False
+                                    else:
+                                        controller_mapblock_possess.drawChanceCard()
 
                 else:
                     if event.type == USEREVENT + 1:
