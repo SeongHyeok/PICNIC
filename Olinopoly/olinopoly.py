@@ -394,8 +394,8 @@ class OlinopolyModel:
             g_dice_image_rect, 'i', True, self.dice_number
         )
 
-        for i in range(4):
-            self.mapblockPopup(self.map_blocks[i].type)
+       # for i in range(4):
+        #    self.mapblockPopup(self.map_blocks[i].type)
 
 
     def setState(self, target_state):
