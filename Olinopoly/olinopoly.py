@@ -789,21 +789,9 @@ class LocationBlockFeat(BlockFeat):
     def __init__(self, mapblocks, money):
         super(LocationBlockFeat, self).__init__(mapblocks, money)
 
-    def buyBlock(self):
-        pass
-
-    def payBlock(self):
-        pass
-
 class CourseBlockFeat(BlockFeat):
     def __init__(self, mapblocks, money):
         super(CourseBlockFeat, self).__init__(mapblocks, money)
-
-    def buyBlock(self):
-        pass
-
-    def payBlock(self):
-        pass
 
 class EventBlockFeat(BlockFeat):
     def __init__(self, mapblocks, money):
