@@ -85,8 +85,14 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width - g_map_block_width, 0)
 ]
 g_map_enable_softdsg_blinking = True
-g_mapblock_price = [None, 10000, 10000, 10000, None, 15000, None, None, None, None, None, 15000, 23000, None, None, None, 21000, None, None, None, 25000, None, 18000, 20000, None, 28000, None, None, 30000, None, 25000, 28000, None, None, None, 30000]
-g_mapblock_return = [None, 5000, 7000, 7000, None, 10000, None, None, None, None, None, 10000, 18000, None, None, None, 8000, None, None, None, 15000, None, 13000, 15000, None, 16000, None, None, 15000, None, 20000, 14000, None, None, None, 20000]
+g_mapblock_price = [None, 10000, 10000, 10000, None, 15000, None, None, None, None,
+                    None, 15000, 23000, None, None, None, 21000, None, None, None,
+                    25000, None, 18000, 20000, None, 28000, None, None, 30000,
+                    None, 25000, 28000, None, None, None, 30000]
+g_mapblock_return = [None, 5000, 7000, 7000, None, 10000, None, None, None, None,
+                     None, 10000, 18000, None, None, None, 8000, None, None, None,
+                     15000, None, 13000, 15000, None, 16000, None, None, 15000,
+                     None, 20000, 14000, None, None, None, 20000]
 # Button
 g_button_roll_dice_rect = (
     g_screen_board_width * 0.6,
