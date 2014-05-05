@@ -18,7 +18,7 @@ Created on Sun Apr  6 21:34:32 2014
 # Imports
 ############################################################################
 
-import pygame, Buttons
+import pygame
 from pygame.locals import *
 import random
 import time
@@ -28,6 +28,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+import Buttons
 import textbox
 
 ############################################################################
@@ -673,6 +674,13 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
+    def get_current_player_name(self):
+        return self.player_data[self.current_team_number].name
+
+    ###############################################
+    # Implement Mapblock Features
+    ###############################################
+
     def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
         print "block type is: ", current_pos_type
         if (current_pos_type == 0) or (current_pos_type == 1):
@@ -922,7 +930,7 @@ class OlinopolyView:
             1
         )
         msg = g_current_turn_str % (
-            self.model.player_data[self.model.current_team_number].name
+            self.model.get_current_player_name()
         )
         current_turn = self.model.current_turn_area.font.render(
             msg,
@@ -1037,6 +1045,13 @@ class OlinopolyView:
             self.model.chat_box.rect,
             self.model.chat_box.width
         )
+        for i in range(len(self.model.chat_box.str_list)):
+            sentence = self.model.chat_box.font.render(
+                self.model.chat_box.str_list[i],
+                True,
+                (10, 10, 115)
+            )
+            self.screen.blit(sentence, (self.model.chat_box.rect[0] + 5, self.model.chat_box.rect[1] + 5 + i * 20))
 
         # Text box
         pygame.draw.rect(
@@ -1067,7 +1082,7 @@ class OlinopolyView:
         popup_surface = pygame.Surface((int(g_popup_screen_rect[2]), int(g_popup_screen_rect[3])))
         popup_surface.fill(pygame.Color(149, 186, 245))
 
-        #question = "Q: %s, what will you do?" % (self.model.player_data[self.model.current_team_number].name)
+        #question = "Q: %s, what will you do?" % (self.model.get_current_player_name())
 
         # maximum number of option: 4
         assert len(self.model.popup_options) <= g_max_popup_option_number
@@ -1288,7 +1303,11 @@ if __name__ == "__main__":
 
                 # Keyboard input --> Text box
                 if event.type == pygame.KEYDOWN:
-                    model.text_box.char_add(event)
+                    r = model.text_box.add_char(event)
+                    if r:
+                        logger.debug("char_add result: %s", r)
+                        model.chat_box.add_sentence("[%s] %s" % (model.get_current_player_name(), r))
+                        model.text_box.str_list = []
                     model.text_box.update()
 
                 if event.type == MOUSEMOTION:
