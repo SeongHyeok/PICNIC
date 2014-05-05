@@ -1618,7 +1618,6 @@ if __name__ == "__main__":
                                         model.get_player_name(model.popup_team),
                                         g_mapblock_name[model.current_land_block.num])
                                     )
-
                             elif model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
                                 if model.current_land_block.num == 15:  # Study Abroad - Exchange student
                                     if i == 0: # Belguim
@@ -1639,7 +1638,6 @@ if __name__ == "__main__":
                             elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
                                 if i == 0:
                                     controller_mapblock_possess.drawChanceCard()
-
 
                 else:
                     if event.type == USEREVENT + 1:
