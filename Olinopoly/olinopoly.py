@@ -504,7 +504,8 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
-        self.current_land_block = self.map_blocks[target_pos]
+        self.current_land_block = None
+
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         else:
@@ -589,6 +590,8 @@ class OlinopolyModel:
                 )
                 if self.markers[team][player].prev_block_pos == None:
                     self.markers[team][player].reloadImage()
+
+            self.current_land_block = self.map_blocks[target_pos]
 
         logger.debug("final target: %d" % (target_pos))
 
@@ -1290,6 +1293,8 @@ if __name__ == "__main__":
                                 model.popup_state = False
                                 break
 
+                    # Check answer from popup and do something
+                    # [Note] Assumtion here: last option is always 'cancel' or 'ignore' which does nothing.
                     if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                         if i == 0:
                             controller_mapblock_possess.buyMapBlock()
