@@ -244,7 +244,7 @@ class OlinopolyModel:
 
         self.dice_number = None
 
-        self.possess_team = None
+        #self.possess_team = None
 
         self.current_land_block = None
 
@@ -296,7 +296,7 @@ class OlinopolyModel:
                         y = init_y + j * g_map_block_height
 
                 map_block_object = MapBlock(
-                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num, self.possess_team
+                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num, None
                 )
                 self.map_blocks.append(map_block_object)
                 num += 1
@@ -398,7 +398,11 @@ class OlinopolyModel:
         )
 
         ###############################
-        self.mapblockPopup(self.current_land_block.type)
+        self.mapblockPopup(
+            self.current_land_block,
+            self.current_land_block_type,
+            self.current_land_block_team
+        )
 
 
     def setState(self, target_state):
@@ -445,6 +449,7 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
+        self.current_land_block = target_pos
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         else:
@@ -616,14 +621,18 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
-    def mapblockPopup(self, current_marker_pos_type):
-        if current_marker_pos_type == 0 or 1:
-            self.popup_state = True
-            self.popup_options = [
-                "Yes",
-                "No",
-            ]
-            self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
+    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team):
+        if current_pos == None:
+            pass
+        else:
+            if current_pos_type == 0 or 1:
+                if current_pos_team == None:
+                    self.popup_state = True
+                    self.popup_options = [
+                        "Yes",
+                        "No",
+                    ]
+                    self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
 
 
 
@@ -1114,6 +1123,13 @@ class DiceAnimationController:
             current_random_dice_num = self.model.dice_number
             self.model.rolling_dice.renderDiceImg(current_random_dice_num)
 
+class MapBlockFeatureController:
+    def __init__(self, model):
+        self.model = model
+
+    def buyMapBlock(self):
+        model.current_land_block.team = model.current_team_number
+
 ############################################################################
 # Main
 ############################################################################
@@ -1135,6 +1151,7 @@ if __name__ == "__main__":
     controller_mouse_over = OlinopolyMouseOverController(model)
     controller_dice = OlinopolyDiceController(model)
     controller_dice_animation = DiceAnimationController(model)
+    controller_mapblock_possess = MapBlockFeatureController(model)
 
     # initialize
     controller_dice_animation.randomdice_count = 1
@@ -1168,7 +1185,10 @@ if __name__ == "__main__":
                         if left < x < right:
                             if top < y < bottom:
                                 logger.debug("Clicked popup option: %d" % (i + 1))
-
+                                if i == 0:
+                                    controller_mapblock_possess()
+                                elif i == 1:
+                                    pass
                                 break
             else:
                 if event.type == USEREVENT + 1:
@@ -1203,6 +1223,11 @@ if __name__ == "__main__":
                                     target_pos = model.markers[team][player].block_pos + model.dice_number
                                 result = model.moveMarker(
                                     team, player, target_pos, True
+                                )
+                                model.mapblockPopup(
+                                    model.current_land_block,
+                                    model.current_land_block.type,
+                                    model.current_land_block.team
                                 )
                                 break
                         if result:
