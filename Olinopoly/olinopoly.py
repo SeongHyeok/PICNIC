@@ -141,6 +141,7 @@ g_softdsg_card_position = [35]
 g_tips_position = [6]
 g_sibb_position = [8]
 g_career_fair_position = [24]
+g_study_abroad_position = [15]
 
 # Current turn information area
 g_current_turn_area_rect = (
@@ -1481,6 +1482,7 @@ class DiceAnimationController:
 class MapBlockFeatureController:
     def __init__(self, model):
         self.model = model
+        self.chooseCountry(False)
 
     def buyMapBlock(self):
         self.model.current_land_block.team = self.model.popup_team
@@ -1489,6 +1491,27 @@ class MapBlockFeatureController:
         self.model.updateOwnedMapblocks()
         self.model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
 
+    def chooseCountry(self, is_active):
+        self.is_active = is_active
+
+    def drawChanceCard(self, is_active):
+        self.model.popup_state = True
+        self.model.popup_options = ["Close"]
+        chance_card_num = random.randint(0,2)
+        if chance_card_num == 0:
+            self.model.popup_questions = [
+                "Congratulations!",
+                "You can roll the dice one more time."
+            ]
+        elif chance_card_num == 1:
+            self.model.popup_questions = [
+                "I'm sorry.",
+                "You miss a turn."
+            ]
+        elif chance_card_num == 2:
+            self.model.popup_questions = [
+                "Better luck next time"
+            ]
 
 ############################################################################
 # Main
@@ -1565,7 +1588,30 @@ if __name__ == "__main__":
                                 if model.current_team_number != model.popup_team:
                                     model.current_team_number = model.popup_team
                                     model.add_system_msg("%s bought block %d" % (model.get_current_player_name(), model.current_land_block.num))
+                                    model.changeToNextTeam() #what if next team is missing a turn?
+                                if model.player_data[model.current_team_number].remaining_miss_turn > 0:
                                     model.changeToNextTeam()
+
+                        if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
+                            if model.current_land_block.num == 15:
+                                if controller_mapblock_possess.is_active:
+                                    if i ==0: # belguim
+                                        study_abroad_num = random.randint(1,3)
+                                    elif i == 1: # Korea
+                                        study_abroad_num = random.randint(3,6)
+                                    elif i == 2: # France
+                                        study_abroad_num = random.randint(2,4)
+                                    elif i == 3: # Singapore
+                                        study_abroad_num = random.randint(1,5)
+                                    model.current_land_block.num += study_abroad_num
+
+                        if model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
+                            if i == 0:
+                                controller_mapblock_possess.drawChanceCard()
+
+
+
+
 
 
             else:
@@ -1634,6 +1680,10 @@ if __name__ == "__main__":
                                         model.current_land_block.team,
                                         model.current_land_block.num
                                     )
+                                    if n in g_study_abroad_position:
+                                        controller_mapblock_possess.is_active = True
+                                        model.moveMarker(team, player, model.current_land_block.num)
+
                                 break
                         if result:
                             model.setState(1)
