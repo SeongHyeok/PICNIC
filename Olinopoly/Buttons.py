@@ -15,7 +15,7 @@ class Button:
 
     def write_text(self, surface, text, text_color, length, height, x, y):
         font_size = int(length//len(text))
-        myFont = pygame.font.SysFont("Calibri", font_size)
+        myFont = pygame.font.SysFont("Calibri", font_size + 2)
         myText = myFont.render(text, 1, text_color)
         surface.blit(myText, ((x+length/2) - myText.get_width()/2, (y+height/2) - myText.get_height()/2))
         return surface
