@@ -516,10 +516,16 @@ class OlinopolyModel:
         else:
             # Check availabiltiy
             if len(self.map_blocks[target_pos].markers_on_block) == g_max_marker_on_one_map_block:
-                logger.debug("Failed to move marker: max reached")
-                logger.debug("moveMarker() Leave")
-                logger.debug("#########################")
-                return False
+                if self.map_blocks[target_pos].markers_on_block[0][0] == team:
+                    logger.debug("Failed to move marker: max reached")
+                    logger.debug("moveMarker() Leave")
+                    logger.debug("#########################")
+                    return False
+            if len(self.map_blocks[target_pos].markers_on_block) > 0:
+                if self.map_blocks[target_pos].markers_on_block[0][0] == team:
+                    if not self.player_data[self.current_team_number].is_sibb:
+                        logger.debug("is_sibb is False, so cannot piggy-back")
+                        return False
 
         prev_pos = self.markers[team][player].block_pos
         logger.debug("prev: %s" % (str(prev_pos)))
@@ -715,6 +721,7 @@ class OlinopolyModel:
                 self.popup_questions = [
                     "You miss a turn.",
                     "Go take a study break!"]
+                self.player_data[self.current_team_number].remaining_miss_turn = 1
             elif current_pos_num == 6:
                 self.popup_options = ["Close"]
                 if self.player_data[self.current_team_number].is_tips:
@@ -727,6 +734,7 @@ class OlinopolyModel:
             elif current_pos_num == 8:
                 self.popup_options = ["Close"]
                 self.popup_questions = ["Now you can piggy-back your markers."]
+                self.player_data[self.current_team_number].is_sibb = True
             elif current_pos_num == 9:
                 self.popup_options = ["Roll Dice"]
                 self.popup_questions = ["Roll the dice and earn times 5000"]
@@ -736,8 +744,9 @@ class OlinopolyModel:
                     "You lose money.",
                     "Go enjoy the spring formal."]
             elif current_pos_num == 14:
-                self.popup_options = ["Roll Dice"]
+                self.popup_options = ["Take Olin Van!"]
                 self.popup_questions = ["You can roll the dice one more time."]
+                self.player_data[self.current_team_number].is_one_more = True
             elif current_pos_num == 15:
                 self.popup_options = [
                     "Belgium",
@@ -756,7 +765,6 @@ class OlinopolyModel:
                     "Congratulations!",
                     "You are the winner of the SERV money"]
             elif current_pos_num == 19:
-                self.player_data[self.current_team_number].money -= g_mapblock_return[19]
                 if self.player_data[self.current_team_number].is_tips:
                     self.player_data[self.current_team_number].is_one_more = True
                     self.popup_questions = [
@@ -771,6 +779,7 @@ class OlinopolyModel:
                     self.popup_options = ["Okay..... T.T"]
                 # if landed on tips: has to pay but can party(roll dice one more time)
                 # if did not land on tips: has to pay but cannot party
+                self.player_data[self.current_team_number].money -= g_mapblock_return[19]
             elif current_pos_num == 24:
                 self.popup_options = ["Close"]
                 self.popup_questions = [
@@ -782,18 +791,21 @@ class OlinopolyModel:
                     "You miss a turn.",
                     "Go to NINJA hours."
                 ]
+                self.player_data[self.current_team_number].remaining_miss_turn = 1
             elif current_pos_num == 27:
                 self.popup_options = ["Close"]
                 self.popup_questions = [
                     "It's spring break!",
                     "Go enjoy your break for 2 turns."
                 ]
+                self.player_data[self.current_team_number].remaining_miss_turn = 2
             elif current_pos_num == 32:
                 self.popup_options = ["Close"]
                 self.popup_questions = [
                     "You got an internship!",
                     "Go do work for a turn and earn money."
                 ]
+                self.player_data[self.current_team_number].remaining_miss_turn = 1
             #elif current_pos_num == 33:
              #   if not senior
                 #self.popup_options = ["Pay Senior"]
@@ -1461,11 +1473,11 @@ if __name__ == "__main__":
                                 result = model.moveMarker(
                                     team, player, target_pos, True
                                 )
-                                logger.debug("current_land_block- num:%s team:%s" % (
-                                    str(model.current_land_block.num), str(model.current_land_block.team)
-                                ))
 
                                 if model.current_land_block:    # if land block is map block
+                                    logger.debug("current_land_block- num:%s team:%s" % (
+                                        str(model.current_land_block.num), str(model.current_land_block.team)
+                                    ))
                                     # Enable map block switch
                                     n = model.current_land_block
                                     if n in g_tips_position:
@@ -1477,12 +1489,12 @@ if __name__ == "__main__":
                                     if n in g_career_fair_position:
                                         model.player_data[team].is_career_fair = True
                                         logger.debug("is_career_fair is ON")
-                                model.mapblockPopup(
-                                    model.current_land_block,
-                                    model.current_land_block.type,
-                                    model.current_land_block.team,
-                                    model.current_land_block.num
-                                )
+                                    model.mapblockPopup(
+                                        model.current_land_block,
+                                        model.current_land_block.type,
+                                        model.current_land_block.team,
+                                        model.current_land_block.num
+                                    )
                                 break
                         if result:
                             model.setState(1)
