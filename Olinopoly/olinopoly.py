@@ -28,6 +28,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+import textbox
+
 ############################################################################
 # Debug options
 ############################################################################
@@ -50,8 +52,8 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 850
-g_screen_board_height = 850
+g_screen_board_width = 700
+g_screen_board_height = 700
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
@@ -85,8 +87,7 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width - g_map_block_width, 0)
 ]
 g_map_enable_softdsg_blinking = True
-g_mapblock_price = [None, 10000, 10000, 10000, None, 15000, None, None, None, None, None, 15000, 23000, None, None, None, 21000, None, None, None, 25000, None, 18000, 20000, None, 28000, None, None, 30000, None, 25000, 28000, None, None, None, 30000]
-g_mapblock_return = [None, 5000, 7000, 7000, None, 10000, None, None, None, None, None, 10000, 18000, None, None, None, 8000, None, None, None, 15000, None, 13000, 15000, None, 16000, None, None, 15000, None, 20000, 14000, None, None, None, 20000]
+
 # Button
 g_button_roll_dice_rect = (
     g_screen_board_width * 0.6,
@@ -198,6 +199,40 @@ g_dice_image_rect = (
     g_screen_board_height * 0.2,
 )
 
+# Chat Box Area
+g_chat_box_rect = (
+    g_screen_board_width,
+    g_screen_board_height * 0.6,
+    g_screen_status_width,
+    g_screen_board_height * 0.35
+)
+
+# Text Box Area
+g_text_box_rect = (
+    g_screen_board_width,
+    g_screen_board_height - g_map_block_height * 0.5,
+    g_screen_status_width,
+    g_map_block_height * 0.5
+)
+
+
+# Mapblocks and money
+
+g_mapblock_price = [None, 10000, 10000, 10000, None,
+                    15000, None, None, None, None,
+                    None, 15000, 23000, None, None,
+                    None, 21000, None, None, None,
+                    25000, None, 18000, 20000, None,
+                    28000, None, None, 30000, None,
+                    25000, 28000, None, None, None, 30000]
+g_mapblock_return = [None, 5000, 7000, 7000, None,
+                     10000, None, None, None, None,
+                     None, 10000, 18000, None, None,
+                     None, 8000, None, None, None,
+                     15000, None, 13000, 15000, None,
+                     16000, None, None, 15000, None,
+                     20000, 14000, None, None, None, 20000]
+
 
 # Game data
 g_max_team_num = 4
@@ -207,8 +242,8 @@ assert 2 <= g_max_team_num <= 4
 assert 1 <= g_max_marker_on_one_map_block <= 4
 
 g_default_name = ["Steven", "Inseong", "Danny", "Paul"]
-g_default_money = 500
-g_tuition = 100
+g_default_money = 200000
+g_tuition = 40000 / 2   # half tuition
 
 g_max_popup_option_number = 4
 
@@ -274,6 +309,7 @@ class OlinopolyModel:
 
         self.map_blocks = []
         num = 0
+
         for i in range(4):    # 0 ~ 3 (bottom, left, top and right)
             init_x, init_y = g_map_block_initial_positions[i]
 
@@ -295,18 +331,16 @@ class OlinopolyModel:
                         x = init_x
                         y = init_y + j * g_map_block_height
 
+
                 map_block_object = MapBlock(
-                    (x, y, g_map_block_width, g_map_block_height), 'i', True, num, None
+                    (x, y, g_map_block_width, g_map_block_height), 'i',
+                    True, num, None, None
                 )
                 self.map_blocks.append(map_block_object)
                 num += 1
 
         for i in range(0, len(self.map_blocks)):
-            logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
-                i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
-            )
-
-            if i in g_location_position or g_softdsg_card_position:
+            if (i in g_location_position) or (i in g_softdsg_card_position):
                 self.map_blocks[i].type = 0 # 0 = location
             elif i in g_course_position:
                 self.map_blocks[i].type = 1 # 1 = course
@@ -314,6 +348,9 @@ class OlinopolyModel:
                 self.map_blocks[i].type = 2 # 2 = event
             elif i in g_chance_card_position:
                 self.map_blocks[i].type = 3 # 3 = chance
+            logger.debug("map block %02d - x: %3d / y: %3d / num: %2d",
+                i, self.map_blocks[i].rect[0], self.map_blocks[i].rect[1], self.map_blocks[i].num
+            )
 
 
         ##############################
@@ -391,6 +428,16 @@ class OlinopolyModel:
         self.updateProfilePosition()
 
         ##############################
+        # Chat box
+
+        self.chat_box = textbox.ChatBox(g_chat_box_rect, 1)
+
+        ##############################
+        # Text box
+
+        self.text_box = textbox.TextBox(g_text_box_rect, 1)
+
+        ##############################
         # Create Rolling Dice "Animation"
 
         self.rolling_dice = DiceImage(
@@ -398,11 +445,11 @@ class OlinopolyModel:
         )
 
         ###############################
-        self.mapblockPopup(
-            self.current_land_block,
-            self.current_land_block_type,
-            self.current_land_block_team
-        )
+        #self.mapblockPopup(
+         #   self.current_land_block,
+          #  self.current_land_block.type,
+           # self.current_land_block.team
+        #)
 
 
     def setState(self, target_state):
@@ -449,7 +496,7 @@ class OlinopolyModel:
         logger.debug("together: %d" % (move_other_together))
         logger.debug("====================")
 
-        self.current_land_block = target_pos
+        self.current_land_block = self.map_blocks[target_pos]
         if target_pos >= g_map_num_blocks:
             target_pos = -1 # -1 means completed
         else:
@@ -621,19 +668,20 @@ class OlinopolyModel:
 
             self.user_profiles[i].reloadImage()
 
-    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team):
-        if current_pos == None:
+    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
+        print "block type is: ", current_pos_type
+        if (current_pos_type == 0) or (current_pos_type == 1):
+            if current_pos_team == None:
+                self.popup_state = True
+                self.popup_options = [
+                    "Yes",
+                    "No",
+                ]
+                self.popup_question = "Q: Would you like to buy"# for %d ?" % (g_mapblock_price[current_pos_num])
+        elif current_pos_type == 2:
             pass
-        else:
-            if current_pos_type == 0 or 1:
-                if current_pos_team == None:
-                    self.popup_state = True
-                    self.popup_options = [
-                        "Yes",
-                        "No",
-                    ]
-                    self.popup_question = "Q: Would you like to buy %d for %s ?" % (current_marker_pos_type, 10000)
-
+        elif current_pos_type == 3:
+            pass
 
 
 class Drawable(object):
@@ -643,7 +691,7 @@ class Drawable(object):
         self.is_visible = is_visible
 
 class MapBlock(Drawable):
-    def __init__(self, rect, c_or_i, is_visible, num, team):
+    def __init__(self, rect, c_or_i, is_visible, num, team, mapblock_type):
         super(MapBlock, self).__init__(rect, c_or_i, is_visible)
         # map block number
         self.num = num
@@ -653,6 +701,9 @@ class MapBlock(Drawable):
 
         # Which team possesses mapblock
         self.team = team
+
+        #type of mapblock
+        self.type = mapblock_type
 
         # image
         if c_or_i == 'i':
@@ -973,6 +1024,30 @@ class OlinopolyView:
                 self.model.user_status[i].money_pos
             )
 
+        # Chat box
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.chat_box.rect,
+            self.model.chat_box.width
+        )
+
+        # Text box
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.text_box.rect,
+            self.model.text_box.width
+        )
+        rect = (
+            self.model.text_box.rect[0] + 5,
+            self.model.text_box.rect[1] + 5,
+            self.model.text_box.rect[2],
+            self.model.text_box.rect[3],
+        )
+        if self.model.text_box.label:
+            self.screen.blit(self.model.text_box.label, rect)
+
         # Rolling Dice Image
         self.screen.blit(
             self.model.rolling_dice.img,
@@ -1141,7 +1216,7 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
-    font_map_block_info = pygame.font.SysFont('Verdana', 16, False)
+    font_map_block_info = pygame.font.SysFont('Arial', 14, False)
     font_temporary_dice = font_map_block_info
 
     # MVC objects
@@ -1187,8 +1262,9 @@ if __name__ == "__main__":
                                 logger.debug("Clicked popup option: %d" % (i + 1))
                                 if i == 0:
                                     controller_mapblock_possess()
+                                    model.popup_state = False
                                 elif i == 1:
-                                    pass
+                                    model.popup_state = False
                                 break
             else:
                 if event.type == USEREVENT + 1:
@@ -1199,6 +1275,11 @@ if __name__ == "__main__":
 
                 if event.type == USEREVENT + 3:
                     controller_dice_animation.randomDice()
+
+                # Keyboard input --> Text box
+                if event.type == pygame.KEYDOWN:
+                    model.text_box.char_add(event)
+                    model.text_box.update()
 
                 if event.type == MOUSEMOTION:
                     controller_mouse.handleMouseEvent(event)
@@ -1227,7 +1308,8 @@ if __name__ == "__main__":
                                 model.mapblockPopup(
                                     model.current_land_block,
                                     model.current_land_block.type,
-                                    model.current_land_block.team
+                                    model.current_land_block.team,
+                                    model.current_land_block.num
                                 )
                                 break
                         if result:
