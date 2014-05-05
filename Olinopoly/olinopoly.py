@@ -828,7 +828,7 @@ class ProfileArea(Drawable):
 
     def reloadImage(self):
         self.img = pygame.transform.scale(
-            pygame.image.load(os.path.join(g_profile_dir_path, "t%d.png" % (self.team))),
+            pygame.image.load(os.path.join(g_profile_dir_path, "%s.png" % (g_default_name[self.team]))),
             (int(self.rect[2]), int(self.rect[3]))
         )
 
@@ -876,7 +876,7 @@ class OlinopolyView:
         self.model = model
         self.screen = screen
 
-        self.font_question = pygame.font.SysFont('Courier New', 35, True)
+        self.font_question = pygame.font.SysFont('Courier New', 27, True)
         self.font_option = pygame.font.SysFont('Arial', 30, True)
 
     def draw(self):
