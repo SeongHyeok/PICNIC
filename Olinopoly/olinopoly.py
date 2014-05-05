@@ -28,6 +28,8 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
+import textbox
+
 ############################################################################
 # Debug options
 ############################################################################
@@ -209,8 +211,8 @@ assert 2 <= g_max_team_num <= 4
 assert 1 <= g_max_marker_on_one_map_block <= 4
 
 g_default_name = ["Steven", "Inseong", "Danny", "Paul"]
-g_default_money = 500
-g_tuition = 100
+g_default_money = 200000
+g_tuition = 40000 / 2   # half tuition
 
 g_max_popup_option_number = 4
 
@@ -264,7 +266,6 @@ class OlinopolyModel:
         for i in range(self.num_of_teams):
             player_data = PlayerData(g_default_name[i], g_default_money, i)
             self.player_data.append(player_data)
-
 
         ##############################
         # Create map blocks
