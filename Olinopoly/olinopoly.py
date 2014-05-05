@@ -707,7 +707,7 @@ class OlinopolyModel:
             self.user_profiles[i].reloadImage()
 
     def get_current_player_name(self):
-        return self.get_player_name(self.current_team_number)
+            return self.get_player_name(self.current_team_number)
 
     def get_player_name(self, n):
         return self.player_data[n].name
@@ -1489,6 +1489,7 @@ class MapBlockFeatureController:
         self.model.updateOwnedMapblocks()
         self.model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
 
+
 ############################################################################
 # Main
 ############################################################################
@@ -1561,6 +1562,8 @@ if __name__ == "__main__":
                         if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                             if i == 0:
                                 controller_mapblock_possess.buyMapBlock()
+                                model.add_system_msg("%s bought block %d" % (model.get_current_player_name(), model.current_land_block.num))
+                                #need to fix this!!!!!!! - current player does not match popup player
 
             else:
                 if event.type == USEREVENT + 1:
