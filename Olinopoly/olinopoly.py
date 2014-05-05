@@ -52,8 +52,8 @@ g_map_block_game_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/gam
 g_map_block_olin_txt_dir_path = os.path.join(g_txt_dir_path, "map_block_desc/olin")
 
 # Screen
-g_screen_board_width = 850
-g_screen_board_height = 850
+g_screen_board_width = 700
+g_screen_board_height = 700
 g_screen_status_width = int(g_screen_board_width * 0.6)
 
 g_screen_width = g_screen_board_width + g_screen_status_width   # DO NOT CHANGE
@@ -87,14 +87,7 @@ g_map_block_initial_positions = [   # DO NOT CHANGE - 4 pairs of (x, y)
     (g_screen_board_width - g_map_block_width, 0)
 ]
 g_map_enable_softdsg_blinking = True
-g_mapblock_price = [None, 10000, 10000, 10000, None, 15000, None, None, None, None,
-                    None, 15000, 23000, None, None, None, 21000, None, None, None,
-                    25000, None, 18000, 20000, None, 28000, None, None, 30000,
-                    None, 25000, 28000, None, None, None, 30000]
-g_mapblock_return = [None, 5000, 7000, 7000, None, 10000, None, None, None, None,
-                     None, 10000, 18000, None, None, None, 8000, None, None, None,
-                     15000, None, 13000, 15000, None, 16000, None, None, 15000,
-                     None, 20000, 14000, None, None, None, 20000]
+
 # Button
 g_button_roll_dice_rect = (
     g_screen_board_width * 0.6,
@@ -203,6 +196,21 @@ g_dice_image_rect = (
     g_screen_board_height * 0.2,
 )
 
+# Chat Box Area
+g_chat_box_rect = (
+    g_screen_board_width,
+    g_screen_board_height * 0.6,
+    g_screen_status_width,
+    g_screen_board_height * 0.35
+)
+
+# Text Box Area
+g_text_box_rect = (
+    g_screen_board_width,
+    g_screen_board_height - g_map_block_height * 0.5,
+    g_screen_status_width,
+    g_map_block_height * 0.5
+)
 
 # Mapblocks and money
 g_location_buy_dict = {1:10000, 5:15000, 12:23000, 16:21000, 20:25000, 22:18000, 25:28000, 28:30000, 31:28000}
@@ -386,6 +394,16 @@ class OlinopolyModel:
             self.user_status.append(status)
 
         self.updateProfilePosition()
+
+        ##############################
+        # Chat box
+
+        self.chat_box = textbox.ChatBox(g_chat_box_rect, 1)
+
+        ##############################
+        # Text box
+
+        self.text_box = textbox.TextBox(g_text_box_rect, 1)
 
         ##############################
         # Create Rolling Dice "Animation"
@@ -976,6 +994,30 @@ class OlinopolyView:
                 self.model.user_status[i].money_pos
             )
 
+        # Chat box
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.chat_box.rect,
+            self.model.chat_box.width
+        )
+
+        # Text box
+        pygame.draw.rect(
+            self.screen,
+            pygame.Color(19, 110, 13),
+            self.model.text_box.rect,
+            self.model.text_box.width
+        )
+        rect = (
+            self.model.text_box.rect[0] + 5,
+            self.model.text_box.rect[1] + 5,
+            self.model.text_box.rect[2],
+            self.model.text_box.rect[3],
+        )
+        if self.model.text_box.label:
+            self.screen.blit(self.model.text_box.label, rect)
+
         # Rolling Dice Image
         self.screen.blit(
             self.model.rolling_dice.img,
@@ -1138,7 +1180,7 @@ if __name__ == "__main__":
     size = (g_screen_width, g_screen_height)
     screen = pygame.display.set_mode(size)
 
-    font_map_block_info = pygame.font.SysFont('Verdana', 16, False)
+    font_map_block_info = pygame.font.SysFont('Arial', 14, False)
     font_temporary_dice = font_map_block_info
 
     # MVC objects
@@ -1192,6 +1234,11 @@ if __name__ == "__main__":
 
                 if event.type == USEREVENT + 3:
                     controller_dice_animation.randomDice()
+
+                # Keyboard input --> Text box
+                if event.type == pygame.KEYDOWN:
+                    model.text_box.char_add(event)
+                    model.text_box.update()
 
                 if event.type == MOUSEMOTION:
                     controller_mouse.handleMouseEvent(event)
