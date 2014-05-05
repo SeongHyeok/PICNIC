@@ -696,10 +696,44 @@ class OlinopolyModel:
                     "No",
                 ]
                 self.popup_question = "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
-        elif current_pos_type == 2:
-            pass
+        self.popup_state = True
+        if current_pos_type == 2:
+            if current_pos_num == 4:
+                self.popup_options = ["Close"]
+                self.popup_question = "You miss a turn. Go take a study break!"
+            elif current_pos_num == 6:
+                self.popup_options = ["Close"]
+                self.popup_question = "Congratulations. You can now enter ManHall!"
+            elif current_pos_num == 8:
+                self.popup_options = ["Close"]
+                self.popup_question = "Now you can piggy-back your markers."
+            elif current_pos_num == 9:
+                self.popup_options = ["Roll Dice"]
+                self.popup_question = "Roll the dice and earn times 5000"
+            elif current_pos_num == 10:
+                self.popup_options = ["Close"]
+                self.popup_question = "You lose money. Go enjoy the spring formal."
+            elif current_pos_num == 14:
+                self.popup_options = ["Roll Dice"]
+                self.popup_question = "You can roll the dice one more time."
+            elif current_pos_num == 15:
+                self.popup_options = [
+                    "Belgium",
+                    "Korea",
+                    "France",
+                    "Singapore"
+                ]
+                self.popup_question = "Choose a country to study abroad"
+            elif current_pos_num == 17:
+                self.popup_options = ["Close"]
+                self.popup_question = "You got caught by the Honor Board! You lose money."
+            elif current_pos_num == 18:
+                self.popup_options = ["Collect Money"]
+                self.popup_question = "Congratulations! You are the winner of the SERV money"
         elif current_pos_type == 3:
-            pass
+            self.popup_options = ["Draw Chance Card"]
+            self.popup_question = "Chance Card!"
+
 
         self.popup_team = self.current_team_number
 
