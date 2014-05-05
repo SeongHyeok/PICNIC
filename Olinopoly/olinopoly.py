@@ -1289,13 +1289,10 @@ if __name__ == "__main__":
                                 logger.debug("Clicked popup option: %d" % (i + 1))
                                 model.popup_state = False
                                 break
-                    if i == 0:
-                        if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
-                            print "Current team number is: %d" % (model.current_team_number)
+
+                    if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
+                        if i == 0:
                             controller_mapblock_possess.buyMapBlock()
-                        elif i == 1:
-                            if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
-                                pass
             else:
                 if event.type == USEREVENT + 1:
                     controller_mouse_over.check()
