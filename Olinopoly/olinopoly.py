@@ -560,6 +560,11 @@ class OlinopolyModel:
                     markers = []
                     for marker in map_block.markers_on_block:
                         markers.append(marker)
+
+                    c = 's are' if len(markers) > 1 else ' is'
+                    self.add_system_msg("%s's marker%s caught by %s's." % (
+                        self.get_player_name(markers[0][0]), c, self.get_current_player_name()))
+
                     for marker in markers:
                         t, p = marker
                         logger.debug("marker %d,%d is moved to the beginning" % (t, p))
@@ -609,6 +614,7 @@ class OlinopolyModel:
 
         if prev_pos == None:    # pay tuition
             self.player_data[team].money -= g_tuition
+            self.add_system_msg("%s paid tuition, %d." % (self.get_current_player_name(), g_tuition))
         else:   # remove from previous map block
             self.map_blocks[prev_pos].markers_on_block.remove([team, player])
 
@@ -691,7 +697,10 @@ class OlinopolyModel:
             self.user_profiles[i].reloadImage()
 
     def get_current_player_name(self):
-        return self.player_data[self.current_team_number].name
+        return self.get_player_name(self.current_team_number)
+
+    def get_player_name(self, n):
+        return self.player_data[n].name
 
     def add_system_msg(self, s):
         self.chat_box.add_sentence("Olinopoly- " + s)
