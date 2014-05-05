@@ -1482,7 +1482,7 @@ class DiceAnimationController:
 class MapBlockFeatureController:
     def __init__(self, model):
         self.model = model
-        self.chooseCountry(False)
+        self.is_active = False
 
     def buyMapBlock(self):
         self.model.current_land_block.team = self.model.popup_team
@@ -1491,10 +1491,7 @@ class MapBlockFeatureController:
         self.model.updateOwnedMapblocks()
         self.model.player_data[self.model.popup_team].money -= g_mapblock_price[self.model.current_land_block.num]
 
-    def chooseCountry(self, is_active):
-        self.is_active = is_active
-
-    def drawChanceCard(self, is_active):
+    def drawChanceCard(self):
         self.model.popup_state = True
         self.model.popup_options = ["Close"]
         chance_card_num = random.randint(0,2)
@@ -1608,6 +1605,17 @@ if __name__ == "__main__":
                         if model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
                             if i == 0:
                                 controller_mapblock_possess.drawChanceCard()
+                                for i in range(len(model.popup_options)):
+                                    left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
+                                    right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
+                                    top = g_popup_screen_rect[1] + model.popup_option_area[i][1]
+                                    bottom = g_popup_screen_rect[1] + model.popup_option_area[i][1] + model.popup_option_area[i][3]
+                                    if left < x < right:
+                                        if top < y < bottom:
+                                            logger.debug("Clicked popup option: %d" % (i + 1))
+                                            model.popup_state = False
+
+
 
 
 
@@ -1674,16 +1682,15 @@ if __name__ == "__main__":
                                     if n in g_career_fair_position:
                                         model.player_data[team].is_career_fair = True
                                         logger.debug("is_career_fair is ON")
+                                    if n in g_study_abroad_position:
+                                        controller_mapblock_possess.is_active = True
+                                        model.moveMarker(team, player, model.current_land_block.num)
                                     model.mapblockPopup(
                                         model.current_land_block,
                                         model.current_land_block.type,
                                         model.current_land_block.team,
                                         model.current_land_block.num
                                     )
-                                    if n in g_study_abroad_position:
-                                        controller_mapblock_possess.is_active = True
-                                        model.moveMarker(team, player, model.current_land_block.num)
-
                                 break
                         if result:
                             model.setState(1)
