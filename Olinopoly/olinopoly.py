@@ -701,9 +701,7 @@ class OlinopolyModel:
                     "No",
                 ]
                 self.popup_questions = [
-                    "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num]),
-                    "Sentence 2222222222",
-                    "Sentence 3333333333333##"
+                    "Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])
                 ]
         elif current_pos_type == 2:
             pass
