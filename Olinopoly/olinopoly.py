@@ -693,8 +693,8 @@ class OlinopolyModel:
     def get_current_player_name(self):
         return self.player_data[self.current_team_number].name
 
-    def add_chat_msg(self, s):
-        self.chat_box.add_sentence(s)
+    def add_system_msg(self, s):
+        self.chat_box.add_sentence("Olinopoly- " + s)
 
     ###############################################
     # Implement Mapblock Features
@@ -1401,6 +1401,13 @@ if __name__ == "__main__":
     ####################
     # While start
     while running:
+
+        # Check missing turn
+        if model.player_data[model.current_team_number].remaining_miss_turn > 0:
+            model.player_data[model.current_team_number].remaining_miss_turn -= 1
+            model.add_system_msg("%s is missing a turn." % (model.get_current_player_name()))
+            model.changeToNextTeam()
+
         for event in pygame.event.get():
             if event.type == QUIT:
                 running = False
