@@ -4,7 +4,4 @@ on a model of computation as a
 set of simultaneous ongoing 
 entities embedded in and 
 interacting with a dynamic 
-environment, for example: com
--putation as it occurs in 
-spreadsheets, video games, web 
-applications, and robots.
+environment.

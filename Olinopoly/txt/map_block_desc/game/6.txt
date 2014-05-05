@@ -1,3 +1,3 @@
-Buy or enter man hall
-man hall price: $20,000
-return:$15,000
+attain an additional turn if
+you land on Man Hall after 
+paying $5,000.
