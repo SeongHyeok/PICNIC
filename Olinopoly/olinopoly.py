@@ -133,9 +133,9 @@ g_chance_card_num = 30
 g_chance_card_position = [7, 13, 21, 29]
 
 # Card Feature
-g_location_position = [1, 5, 12, 16, 20, 22, 25, 28, 31]
-g_course_position = [2, 3, 11, 23, 30]
-g_event_position = [4, 6, 8, 9, 10, 14, 15, 17, 18, 24, 26, 27, 32, 33, 34]
+g_location_position = [1, 5, 12, 16, 20, 22, 25, 28, 31] # 9
+g_course_position = [2, 3, 11, 23, 30]  # 5
+g_event_position = [4, 6, 8, 9, 10, 14, 15, 17, 18, 19, 24, 26, 27, 32, 33, 34] # 16
 g_softdsg_card_position = [35]
 
 g_tips_position = [6]
@@ -230,19 +230,19 @@ g_text_box_rect = (
 
 # Mapblocks and money
 
-g_mapblock_price = [None, 10000, 10000, 10000, None,
-                    15000, None, None, None, None,
-                    None, 15000, 23000, None, None,
-                    None, 21000, None, None, None,
-                    25000, None, 18000, 20000, None,
-                    28000, None, None, 30000, None,
+g_mapblock_price = [None, 10000, 10000, 10000, None, # ~  4
+                    15000, None, None, None, None,   # ~  9
+                    None, 15000, 23000, None, None,  # ~ 14
+                    None, 21000, None, None, None,   # ~ 19
+                    25000, None, 18000, 20000, None, # ~ 24
+                    28000, None, None, 30000, None,  # ~ 29
                     25000, 28000, None, None, None, 30000]
-g_mapblock_return = [None, 5000, 7000, 7000, None,
-                     10000, None, None, None, None,
-                     None, 10000, 18000, None, None,
-                     None, 8000, None, None, None,
-                     15000, None, 13000, 15000, None,
-                     16000, None, None, 15000, None,
+g_mapblock_return = [None, 5000, 7000, 7000, None,   # ~  4
+                     10000, None, None, None, None,  # ~  9
+                     None, 10000, 18000, None, None, # ~ 14
+                     None, 8000, None, None, 5000,   # ~ 19
+                     15000, None, 13000, 15000, None,# ~ 24
+                     16000, None, None, 15000, None, # ~ 29
                      20000, 14000, None, None, None, 20000]
 
 
@@ -695,7 +695,10 @@ class OlinopolyModel:
     ###############################################
 
     def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
-        print "block type is: ", current_pos_type
+        logger.debug("block type is: %d" % (current_pos_type))
+
+        self.popup_state = True
+
         if (current_pos_type == MAPBLOCK_TYPE_LOCATION) or (current_pos_type == MAPBLOCK_TYPE_COURSE):
             if current_pos_team == None:
                 self.popup_state = True
@@ -704,8 +707,9 @@ class OlinopolyModel:
                     "No",
                 ]
                 self.popup_questions = ["Q: Would you like to buy for %d ?" % (g_mapblock_price[current_pos_num])]
-        self.popup_state = True
-        if current_pos_type == MAPBLOCK_TYPE_EVENT:
+            else:
+                self.popup_state = False
+        elif current_pos_type == MAPBLOCK_TYPE_EVENT:
             if current_pos_num == 4:
                 self.popup_options = ["Close"]
                 self.popup_questions = [
@@ -713,9 +717,13 @@ class OlinopolyModel:
                     "Go take a study break!"]
             elif current_pos_num == 6:
                 self.popup_options = ["Close"]
-                self.popup_questions = [
-                    "Congratulations.",
-                    "You can now enter ManHall!"]
+                if self.player_data[self.current_team_number].is_tips:
+                    self.popup_questions = [
+                        "You have already taken tips."]
+                else:
+                    self.popup_questions = [
+                        "Congratulations.",
+                        "You can now enter ManHall!"]
             elif current_pos_num == 8:
                 self.popup_options = ["Close"]
                 self.popup_questions = ["Now you can piggy-back your markers."]
@@ -748,9 +756,19 @@ class OlinopolyModel:
                     "Congratulations!",
                     "You are the winner of the SERV money"]
             elif current_pos_num == 19:
-                self.player_data[self.current_team_number].money -= g_mapblock_price[19]
-                if self.player_data[self.current_team_number].is_sibb:
+                self.player_data[self.current_team_number].money -= g_mapblock_return[19]
+                if self.player_data[self.current_team_number].is_tips:
                     self.player_data[self.current_team_number].is_one_more = True
+                    self.popup_questions = [
+                        "Welcome to ManHall Party!",
+                        "Enjoy and roll the dice one more time!"]
+                    self.popup_options = ["Whooray!!!! :-)"]
+                else:
+                    self.popup_questions = [
+                        "You cannot enjoy ManHall Party",
+                        "because you didn't take TIPS!"
+                    ]
+                    self.popup_options = ["Okay..... T.T"]
                 # if landed on tips: has to pay but can party(roll dice one more time)
                 # if did not land on tips: has to pay but cannot party
             elif current_pos_num == 24:
@@ -1380,6 +1398,8 @@ if __name__ == "__main__":
                 if event.type == MOUSEBUTTONUP:
                     x, y = pygame.mouse.get_pos()
                     logger.debug("Click when popup - x: %d / y: %d" % (x, y))
+
+                    option_clicked = False
                     for i in range(len(model.popup_options)):
                         left = g_popup_screen_rect[0] +  model.popup_option_area[i][0]
                         right = g_popup_screen_rect[0] + model.popup_option_area[i][0] + model.popup_option_area[i][2]
@@ -1389,13 +1409,14 @@ if __name__ == "__main__":
                             if top < y < bottom:
                                 logger.debug("Clicked popup option: %d" % (i + 1))
                                 model.popup_state = False
+                                option_clicked = True
                                 break
 
-                    # Check answer from popup and do something
-                    # [Note] Assumtion here: last option is always 'cancel' or 'ignore' which does nothing.
-                    if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
-                        if i == 0:
-                            controller_mapblock_possess.buyMapBlock()
+                    if option_clicked:
+                        # Check clicked option from popup and do something
+                        if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
+                            if i == 0:
+                                controller_mapblock_possess.buyMapBlock()
             else:
                 if event.type == USEREVENT + 1:
                     controller_mouse_over.check()
@@ -1436,18 +1457,26 @@ if __name__ == "__main__":
                                     target_pos = model.dice_number
                                 else:
                                     target_pos = model.markers[team][player].block_pos + model.dice_number
+
                                 result = model.moveMarker(
                                     team, player, target_pos, True
                                 )
-                                if model.current_land_block:    # if map block
+                                logger.debug("current_land_block- num:%s team:%s" % (
+                                    str(model.current_land_block.num), str(model.current_land_block.team)
+                                ))
+
+                                if model.current_land_block:    # if land block is map block
                                     # Enable map block switch
                                     n = model.current_land_block
                                     if n in g_tips_position:
                                         model.player_data[team].is_tips = True
+                                        logger.debug("is_tips is ON")
                                     if n in g_sibb_position:
                                         model.player_data[team].is_sibb = True
+                                        logger.debug("is_sibb is ON")
                                     if n in g_career_fair_position:
                                         model.player_data[team].is_career_fair = True
+                                        logger.debug("is_career_fair is ON")
                                 model.mapblockPopup(
                                     model.current_land_block,
                                     model.current_land_block.type,
