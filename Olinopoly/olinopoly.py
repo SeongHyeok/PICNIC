@@ -1582,12 +1582,7 @@ if __name__ == "__main__":
                         if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                             if i == 0:
                                 controller_mapblock_possess.buyMapBlock()
-                                if model.current_team_number != model.popup_team:
-                                    model.current_team_number = model.popup_team
-                                    model.add_system_msg("%s bought block %d" % (model.get_current_player_name(), model.current_land_block.num))
-                                    model.changeToNextTeam() #what if next team is missing a turn?
-                                if model.player_data[model.current_team_number].remaining_miss_turn > 0:
-                                    model.changeToNextTeam()
+                                model.add_system_msg("%s bought block %d" % (model.get_player_name(model.popup_team), model.current_land_block.num))
 
                         if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
                             if model.current_land_block.num == 15:
@@ -1614,10 +1609,6 @@ if __name__ == "__main__":
                                         if top < y < bottom:
                                             logger.debug("Clicked popup option: %d" % (i + 1))
                                             model.popup_state = False
-
-
-
-
 
 
 
