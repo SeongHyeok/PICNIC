@@ -252,6 +252,13 @@ g_mapblock_return = [None, 5000, 7000, 7000, None,   # ~  4
                      16000, None, None, 15000, None, # ~ 29
                      20000, 14000, None, None, None, 20000]
 
+g_mapblock_name = ["Start/End", "West Hall", "OIE", "Design Nature", "Study Break",
+                   "Parcel B", "TIPS", "Chance", "SIBB", "Room Draw",
+                   "Spring Formal", "UOCD", "Academic Center", "Chance", "Olin Van",
+                   "Exchange Student", "Library", "Honor Code", "SERV", "Man Hall",
+                   "East Hall", "Chance", "Dining Hall", "POE", "Career Fair",
+                   "Parking lot B", "Ninja Hours", "Study Break", "LPB", "Chance",
+                   "SCOPE", "The O", "Internship", "Graduation", "SERV donation", "Software Design"]
 
 # Game data
 g_max_team_num = 4
@@ -321,6 +328,7 @@ class OlinopolyModel:
             "Q: "
         ]
         self.popup_team = None  # team which made popup
+        self.popup_player = None    # player which made popup
 
         # Set initial player data
         self.player_data = []
@@ -720,7 +728,7 @@ class OlinopolyModel:
     # Implement Mapblock Features
     ###############################################
 
-    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num):
+    def mapblockPopup(self, current_pos, current_pos_type, current_pos_team, current_pos_num, player):
         logger.debug("block type is: %d" % (current_pos_type))
 
         self.popup_state = True
@@ -852,7 +860,7 @@ class OlinopolyModel:
             self.popup_questions = ["Chance Card!"]
 
         self.popup_team = self.current_team_number
-
+        self.popup_player = player
 
     def updateOwnedMapblocks(self):
         for i in range(g_max_team_num):
@@ -1066,10 +1074,12 @@ class DiceImage(Drawable):
                 pygame.image.load(os.path.join(g_dice_dir_path, "1.gif")),
                 (int(self.rect[2]), int(self.rect[3])))
         else:
-            self.img = pygame.transform.scale(
-                pygame.image.load(os.path.join(g_dice_dir_path, "%d.gif" % (dice_num))),
-                (int(self.rect[2]), int(self.rect[3]))
-            )
+            path = os.path.join(g_dice_dir_path, "%d.gif" % (dice_num))
+            if os.path.exists(path):
+                self.img = pygame.transform.scale(
+                    pygame.image.load(path),
+                    (int(self.rect[2]), int(self.rect[3]))
+                )
 
 class OwnsMapblock(Drawable):
     def __init__(self, rect, c_or_i, is_visible, team, bought_map_block):
@@ -1484,7 +1494,6 @@ class DiceAnimationController:
 class MapBlockFeatureController:
     def __init__(self, model):
         self.model = model
-        self.is_active = False
 
     def buyMapBlock(self):
         self.model.current_land_block.team = self.model.popup_team
@@ -1576,34 +1585,40 @@ if __name__ == "__main__":
                         bottom = g_popup_screen_rect[1] + model.popup_option_area[i][1] + model.popup_option_area[i][3]
                         if left < x < right:
                             if top < y < bottom:
-                                logger.debug("Clicked popup option: %d" % (i + 1))
+                                logger.debug("Clicked popup option: %d" % (i))
+                                model.popup_state = False
                                 option_clicked = True
-                                if model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
-                                    model.popup_state = True
-                                else:
-                                    model.popup_state = False
-                                    break
+                                break
                     if option_clicked:
                         # Check clicked option from popup and do something
+                        logger.debug("popup block info- num:%d, type:%d" % (model.current_land_block.num, model.current_land_block.type))
+
                         if (model.current_land_block.type == MAPBLOCK_TYPE_LOCATION) or (model.current_land_block.type == MAPBLOCK_TYPE_COURSE):
                             if i == 0:
                                 controller_mapblock_possess.buyMapBlock()
-                                model.add_system_msg("%s bought block %d" % (model.get_player_name(model.popup_team), model.current_land_block.num))
+                                model.add_system_msg("%s bought '%s'" % (
+                                    model.get_player_name(model.popup_team),
+                                    g_mapblock_name[model.current_land_block.num])
+                                )
 
-                        if model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
-                            if model.current_land_block.num == 15:
-                                if controller_mapblock_possess.is_active:
-                                    if i ==0: # belguim
-                                        study_abroad_num = random.randint(1,3)
-                                    elif i == 1: # Korea
-                                        study_abroad_num = random.randint(3,6)
-                                    elif i == 2: # France
-                                        study_abroad_num = random.randint(2,4)
-                                    elif i == 3: # Singapore
-                                        study_abroad_num = random.randint(1,5)
-                                    model.current_land_block.num += study_abroad_num
+                        elif model.current_land_block.type == MAPBLOCK_TYPE_EVENT:
+                            if model.current_land_block.num == 15:  # Study Abroad - Exchange student
+                                if i == 0: # Belguim
+                                    study_abroad_num = random.randint(1, 3)
+                                elif i == 1: # Korea
+                                    study_abroad_num = random.randint(3, 6)
+                                elif i == 2: # France
+                                    study_abroad_num = random.randint(2, 4)
+                                elif i == 3: # Singapore
+                                    study_abroad_num = random.randint(1, 5)
+                                logger.debug("Study abroad num: %d" % (study_abroad_num))
+                                t = model.popup_team
+                                p = model.popup_player
+                                target = model.markers[t][p].block_pos + study_abroad_num
+                                logger.debug("Move marker %d, %d to %d" % (t, p, target))
+                                model.moveMarker(t, p, target, True)
 
-                        if model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
+                        elif model.current_land_block.type == MAPBLOCK_TYPE_CHANCE:
                             if i == 0:
                                 controller_mapblock_possess.drawChanceCard()
                                 chance_card_drawn = True
@@ -1660,7 +1675,7 @@ if __name__ == "__main__":
                                     team, player, target_pos, True
                                 )
 
-                                if model.current_land_block:    # if land block is map block
+                                if model.current_land_block:    # if land block is map block (it it sen in moveMarker())
                                     logger.debug("current_land_block- num:%s team:%s" % (
                                         str(model.current_land_block.num), str(model.current_land_block.team)
                                     ))
@@ -1675,15 +1690,15 @@ if __name__ == "__main__":
                                     if n in g_career_fair_position:
                                         model.player_data[team].is_career_fair = True
                                         logger.debug("is_career_fair is ON")
-                                    if n in g_study_abroad_position:
-                                        controller_mapblock_possess.is_active = True
-                                        model.moveMarker(team, player, model.current_land_block.num)
                                     model.mapblockPopup(
                                         model.current_land_block,
                                         model.current_land_block.type,
                                         model.current_land_block.team,
-                                        model.current_land_block.num
+                                        model.current_land_block.num,
+                                        player
                                     )
+                                    if n in g_study_abroad_position:
+                                        model.moveMarker(team, player, model.current_land_block.num)
                                 break
                         if result:
                             model.setState(1)
